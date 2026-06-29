@@ -40,6 +40,11 @@ class _GameScreenState extends State<GameScreen> {
   HousieRoom? _latestRoom;
   bool _isNavigatedToResults = false;
 
+  // Real-time claim notification state
+  final Set<String> _shownClaimKeys = {};
+  HousieClaim? _activeNotificationClaim;
+  Timer? _notificationDismissTimer;
+
   @override
   void initState() {
     super.initState();
@@ -60,6 +65,8 @@ class _GameScreenState extends State<GameScreen> {
     _roomSubscription = GameService().getRoomStream(widget.roomId).listen((room) {
       if (room != null) {
         if (mounted) {
+          _detectNewClaims(room);
+          
           setState(() {
             _room = room;
             _latestRoom = room;
@@ -89,7 +96,52 @@ class _GameScreenState extends State<GameScreen> {
     _roomSubscription?.cancel();
     _stopCountdownCycle();
     _syncTimer?.cancel();
+    _notificationDismissTimer?.cancel();
     super.dispose();
+  }
+
+  String _getClaimLabel(String type) {
+    switch (type) {
+      case 'early_five': return 'Early 5';
+      case 'top_line': return 'Top Line';
+      case 'middle_line': return 'Middle Line';
+      case 'bottom_line': return 'Bottom Line';
+      case 'full_house': return 'Full House';
+      default: return type.toUpperCase();
+    }
+  }
+
+  void _detectNewClaims(HousieRoom room) {
+    if (_room == null) {
+      // First load: cache all existing claims to prevent old notifications
+      for (var claim in room.claims) {
+        _shownClaimKeys.add("${claim.playerName}_${claim.type}");
+      }
+      return;
+    }
+
+    for (var claim in room.claims) {
+      final key = "${claim.playerName}_${claim.type}";
+      if (!_shownClaimKeys.contains(key)) {
+        _shownClaimKeys.add(key);
+        _triggerClaimNotification(claim);
+      }
+    }
+  }
+
+  void _triggerClaimNotification(HousieClaim claim) {
+    _notificationDismissTimer?.cancel();
+    setState(() {
+      _activeNotificationClaim = claim;
+    });
+
+    _notificationDismissTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) {
+        setState(() {
+          _activeNotificationClaim = null;
+        });
+      }
+    });
   }
 
   Future<void> _saveSession() async {
@@ -622,6 +674,72 @@ class _GameScreenState extends State<GameScreen> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.fastOutSlowIn,
+                  top: _activeNotificationClaim != null ? 16 : -100,
+                  left: 16,
+                  right: 16,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF102A43).withValues(alpha: 0.95),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.amber.withValues(alpha: 0.5), width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.emoji_events,
+                          color: Colors.amber,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _activeNotificationClaim != null
+                                    ? '${_activeNotificationClaim!.playerName} claimed ${_getClaimLabel(_activeNotificationClaim!.type)}!'
+                                    : '',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              const Text(
+                                'Claim verified successfully',
+                                style: TextStyle(
+                                  color: Colors.greenAccent,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white38, size: 18),
+                          onPressed: () {
+                            setState(() {
+                              _activeNotificationClaim = null;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
