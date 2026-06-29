@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "372195678596",
+    "firebase_url": "https://housie-game-be0b8-default-rtdb.firebaseio.com",
+    "project_id": "housie-game-be0b8",
+    "storage_bucket": "housie-game-be0b8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:372195678596:android:46eeba720df318d9eee5d1",
+        "android_client_info": {
+          "package_name": "com.example.housie_project"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOn911kxdtlnwX625MvB8xcGJzAg3mx8k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:372195678596:android:4c5ce56c561b00edeee5d1",
+        "android_client_info": {
+          "package_name": "com.housie.developerbros"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOn911kxdtlnwX625MvB8xcGJzAg3mx8k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

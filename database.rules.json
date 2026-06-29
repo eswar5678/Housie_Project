@@ -1,0 +1,36 @@
+{
+    "rules": {
+        "rooms": {
+            "$roomId": {
+                ".read": "auth != null",
+                ".write": "auth != null && !data.exists()",
+                "players": {
+                    "$playerName": {
+                        ".write": "auth != null && (!data.exists() || data.child('uid').val() == auth.uid)"
+                    }
+                },
+                "status": {
+                    ".write": "auth != null"
+                },
+                "calledNumbers": {
+                    ".write": "auth != null"
+                },
+                "currentNumber": {
+                    ".write": "auth != null"
+                },
+                "claims": {
+                    ".write": "auth != null"
+                },
+                "lastCallTimestamp": {
+                    ".write": "auth != null"
+                },
+                "gameStartTimestamp": {
+                    ".write": "auth != null"
+                },
+                "hostName": {
+                    ".write": "auth != null"
+                }
+            }
+        }
+    }
+}

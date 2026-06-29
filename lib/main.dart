@@ -1,0 +1,72 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'screens/home_screen.dart';
+import 'firebase_options.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    debugPrint('Flutter Error: ${details.toString()}');
+  };
+
+  try {
+    debugPrint('Initializing Firebase...');
+    if (Firebase.apps.isEmpty) {
+      try {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      } on FirebaseException catch (e) {
+        if (e.code == 'duplicate-app') {
+          debugPrint('Firebase already initialized (native). Ignoring.');
+        } else {
+          rethrow;
+        }
+      }
+    } else {
+      debugPrint('Firebase already initialized (dart).');
+    }
+    debugPrint('Firebase initialized successfully.');
+    
+    // Silent anonymous auth at startup to avoid permission issues
+    if (FirebaseAuth.instance.currentUser == null) {
+      debugPrint('Firebase: Silent login at startup...');
+      await FirebaseAuth.instance.signInAnonymously();
+    }
+    
+    runApp(const MyApp());
+  } catch (e, stackTrace) {
+    debugPrint('Error during startup: $e');
+    debugPrint('Stack trace: $stackTrace');
+    runApp(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: SelectableText('Startup Error: $e\n\n$stackTrace'),
+        ),
+      ),
+    ));
+  }
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Housie Multiplayer',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        primarySwatch: Colors.deepPurple,
+        useMaterial3: true,
+        fontFamily: 'Roboto', // Default for now
+      ),
+      home: const HomeScreen(),
+    );
+  }
+}
+

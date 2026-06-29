@@ -1,0 +1,43 @@
+﻿Analyzing Housie_Project...                                     
+
+   info - Don't invoke 'print' in production code - lib\screens\game_screen.dart:130:9 - avoid_print
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\game_screen.dart:156:42 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\game_screen.dart:276:73 - deprecated_member_use
+   info - 'WillPopScope' is deprecated and shouldn't be used. Use PopScope instead. The Android predictive back feature will not work with WillPopScope. This feature was deprecated after v3.12.0-1.0.pre - lib\screens\game_screen.dart:350:12 - deprecated_member_use
+warning - The value of the local variable 'displayNum' isn't used - lib\screens\game_screen.dart:392:17 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\game_screen.dart:443:81 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\game_screen.dart:506:77 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\game_screen.dart:570:160 - deprecated_member_use
+warning - Unused import: '../models/room.dart' - lib\screens\home_screen.dart:9:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\screens\home_screen.dart:43:9 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\screens\home_screen.dart:64:11 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\home_screen.dart:75:11 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\home_screen.dart:238:29 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\join_screen.dart:226:37 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\screens\lobby_screen.dart:53:9 - avoid_print
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\lobby_screen.dart:73:42 - use_build_context_synchronously
+   info - 'WillPopScope' is deprecated and shouldn't be used. Use PopScope instead. The Android predictive back feature will not work with WillPopScope. This feature was deprecated after v3.12.0-1.0.pre - lib\screens\lobby_screen.dart:216:12 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\lobby_screen.dart:337:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\lobby_screen.dart:573:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\lobby_screen.dart:589:70 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\lobby_screen.dart:595:61 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\lobby_screen.dart:657:47 - deprecated_member_use
+   info - Function literals shouldn't be passed to 'forEach' - lib\screens\results_screen.dart:53:62 - avoid_function_literals_in_foreach_calls
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\results_screen.dart:117:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\results_screen.dart:143:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\results_screen.dart:158:75 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\results_screen.dart:172:89 - deprecated_member_use
+   info - Unnecessary use of 'toList' in a spread - lib\screens\results_screen.dart:192:30 - unnecessary_to_list_in_spreads
+   info - Don't invoke 'print' in production code - lib\services\game_service.dart:14:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\game_service.dart:34:5 - avoid_print
+warning - The value of the local variable 'playerNameClean' isn't used - lib\services\game_service.dart:48:11 - unused_local_variable
+   info - Don't invoke 'print' in production code - lib\services\game_service.dart:50:5 - avoid_print
+warning - The value of the local variable 'playerIndex' isn't used - lib\services\game_service.dart:112:13 - unused_local_variable
+   info - Don't invoke 'print' in production code - lib\services\game_service.dart:184:5 - avoid_print
+warning - The declaration '_rowCount' isn't referenced - lib\services\ticket_generator.dart:94:14 - unused_element
+   info - Statements in an if should be enclosed in a block - lib\widgets\geometric_background.dart:141:19 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\geometric_background.dart:142:12 - curly_braces_in_flow_control_structures
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\housie_ticket_widget.dart:23:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\housie_ticket_widget.dart:26:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\housie_ticket_widget.dart:53:57 - deprecated_member_use
+
