@@ -144,6 +144,140 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
+  void _showPlayersDialog(BuildContext context, HousieRoom room) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF102A43),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        final playersList = room.players.values.toList();
+        playersList.sort((a, b) {
+          if (a.isHost && !b.isHost) return -1;
+          if (!a.isHost && b.isHost) return 1;
+          if (a.isOnline && !b.isOnline) return -1;
+          if (!a.isOnline && b.isOnline) return 1;
+          return a.name.compareTo(b.name);
+        });
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'PLAYERS (${playersList.where((p) => p.isOnline).length}/${playersList.length})',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white70),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: playersList.length,
+                    itemBuilder: (context, index) {
+                      final player = playersList[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.03),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: player.isOnline 
+                                ? Colors.white10 
+                                : Colors.white.withValues(alpha: 0.05),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            AnimatedAvatar(
+                              name: player.name,
+                              isOnline: player.isOnline,
+                              isHost: player.isHost,
+                              size: 40,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        player.name,
+                                        style: TextStyle(
+                                          color: player.isOnline ? Colors.white : Colors.white30,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                      if (player.name.trim().toUpperCase() == widget.playerName.trim().toUpperCase()) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue.withValues(alpha: 0.2),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: const Text(
+                                            'YOU',
+                                            style: TextStyle(color: Colors.blue, fontSize: 8, fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    player.isOnline 
+                                        ? (player.isHost ? 'Hosting the game' : 'Online & Playing') 
+                                        : 'Offline / Disconnected',
+                                    style: TextStyle(
+                                      color: player.isOnline ? Colors.greenAccent : Colors.white24,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              '${player.ticketCount} ${player.ticketCount > 1 ? "Tickets" : "Ticket"}',
+                              style: TextStyle(
+                                color: player.isOnline ? Colors.white60 : Colors.white24,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _saveSession() async {
     await PersistenceService().saveGameSession(
       roomId: widget.roomId,
@@ -483,6 +617,8 @@ class _GameScreenState extends State<GameScreen> {
             );
           }
 
+          final onlinePlayerCount = room.players.values.where((p) => p.isOnline).length;
+
           return Scaffold(
             backgroundColor: const Color(0xFF0D1B3E),
             body: Stack(
@@ -507,16 +643,23 @@ class _GameScreenState extends State<GameScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                  decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(15)),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.people, color: Colors.white, size: 14),
-                                      const SizedBox(width: 4),
-                                      Text('${room.players.length}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                                    ],
+                                GestureDetector(
+                                  onTap: () => _showPlayersDialog(context, room),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.4),
+                                      borderRadius: BorderRadius.circular(15),
+                                      border: Border.all(color: Colors.white10),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.people, color: Colors.amber, size: 14),
+                                        const SizedBox(width: 4),
+                                        Text('$onlinePlayerCount', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                      ],
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -745,5 +888,153 @@ class _GameScreenState extends State<GameScreen> {
               ],
             ),
           );
+  }
+}
+
+class AnimatedAvatar extends StatefulWidget {
+  final String name;
+  final bool isOnline;
+  final bool isHost;
+  final double size;
+
+  const AnimatedAvatar({
+    super.key,
+    required this.name,
+    required this.isOnline,
+    required this.isHost,
+    this.size = 50,
+  });
+
+  @override
+  State<AnimatedAvatar> createState() => _AnimatedAvatarState();
+}
+
+class _AnimatedAvatarState extends State<AnimatedAvatar> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Color _getColorFromName(String name) {
+    final hash = name.codeUnits.fold(0, (prev, element) => prev + element);
+    final colors = [
+      Colors.blueAccent,
+      Colors.pinkAccent,
+      Colors.tealAccent,
+      Colors.amberAccent,
+      Colors.purpleAccent,
+      Colors.deepOrangeAccent,
+      Colors.greenAccent,
+      Colors.cyanAccent,
+    ];
+    return colors[hash % colors.length];
+  }
+
+  IconData _getIconFromName(String name) {
+    final hash = name.codeUnits.fold(0, (prev, element) => prev + element);
+    final icons = [
+      Icons.sports_esports,
+      Icons.face,
+      Icons.sentiment_very_satisfied,
+      Icons.flash_on,
+      Icons.star,
+      Icons.palette,
+      Icons.anchor,
+      Icons.auto_awesome,
+    ];
+    return icons[hash % icons.length];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final baseColor = _getColorFromName(widget.name);
+    final avatarIcon = _getIconFromName(widget.name);
+
+    return SizedBox(
+      width: widget.size + 10,
+      height: widget.size + 10,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (widget.isOnline)
+            RotationTransition(
+              turns: _controller,
+              child: Container(
+                width: widget.size + 6,
+                height: widget.size + 6,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: SweepGradient(
+                    colors: [
+                      baseColor.withValues(alpha: 0.1),
+                      baseColor,
+                      baseColor.withValues(alpha: 0.1),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          Container(
+            width: widget.size,
+            height: widget.size,
+            decoration: BoxDecoration(
+              color: widget.isOnline ? const Color(0xFF102A43) : Colors.grey.shade900,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: widget.isOnline ? Colors.white24 : Colors.white10,
+                width: 2,
+              ),
+            ),
+            child: Icon(
+              avatarIcon,
+              color: widget.isOnline ? baseColor : Colors.grey,
+              size: widget.size * 0.5,
+            ),
+          ),
+          if (widget.isHost)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(
+                  color: Colors.amber,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.star,
+                  size: 10,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          Positioned(
+            bottom: 2,
+            right: 2,
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: widget.isOnline ? Colors.greenAccent : Colors.redAccent,
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFF0D1B3E), width: 1.5),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
