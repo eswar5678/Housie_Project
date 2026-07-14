@@ -96,6 +96,7 @@ class HousieRoom {
   final String roomName;
   final int maxPlayers;
   final String hostName;
+  final String hostUid; // Added for security rules validation
   final double ticketPrice;
   final Map<String, Player> players; // Changed from List to Map for O(1) joins
   final String status; // 'lobby', 'playing', 'finished'
@@ -109,6 +110,7 @@ class HousieRoom {
     required this.roomName,
     required this.maxPlayers,
     required this.hostName,
+    required this.hostUid,
     required this.ticketPrice,
     required this.players,
     this.status = 'lobby',
@@ -130,6 +132,7 @@ class HousieRoom {
       'roomName': roomName,
       'maxPlayers': maxPlayers,
       'hostName': hostName,
+      'hostUid': hostUid,
       'ticketPrice': ticketPrice,
       'players': players.map((k, v) => MapEntry(k, v.toMap())),
       'status': status,
@@ -154,6 +157,7 @@ class HousieRoom {
       roomName: map['roomName'] ?? '',
       maxPlayers: map['maxPlayers'] ?? 0,
       hostName: map['hostName'] ?? '',
+      hostUid: map['hostUid'] ?? '',
       ticketPrice: (map['ticketPrice'] ?? 0.0).toDouble(),
       players: playersMap,
       status: map['status'] ?? 'lobby',

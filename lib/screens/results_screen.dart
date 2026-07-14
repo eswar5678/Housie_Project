@@ -4,6 +4,9 @@ import '../widgets/geometric_background.dart';
 import '../widgets/housie_ticket_widget.dart';
 import '../services/persistence_service.dart';
 import '../services/game_service.dart';
+import '../widgets/custom_app_bar.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ResultsScreen extends StatefulWidget {
   final HousieRoom room;
@@ -21,6 +24,13 @@ class _ResultsScreenState extends State<ResultsScreen> {
   void initState() {
     super.initState();
     _checkHostAndClear();
+    
+    // Show rate us popup after a short delay
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        _showRateUsDialog();
+      }
+    });
   }
 
   Future<void> _checkHostAndClear() async {
@@ -42,6 +52,108 @@ class _ResultsScreenState extends State<ResultsScreen> {
       case 'full_house': return 'Full House';
       default: return type.toUpperCase();
     }
+  }
+
+  void _showRateUsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        int selectedStars = 0;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              backgroundColor: const Color(0xFF102A43),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: const Icon(Icons.close, color: Colors.white54, size: 24),
+                      ),
+                    ),
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          const Icon(Icons.star, color: Colors.amber, size: 50),
+                          Positioned(top: 15, left: 15, child: Container(width: 4, height: 4, decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle))),
+                          Positioned(bottom: 20, right: 15, child: Container(width: 5, height: 5, decoration: const BoxDecoration(color: Colors.purpleAccent, shape: BoxShape.circle))),
+                          Positioned(top: 25, right: 10, child: Container(width: 3, height: 3, decoration: const BoxDecoration(color: Colors.lightBlueAccent, shape: BoxShape.circle))),
+                          Positioned(bottom: 15, left: 20, child: Container(width: 4, height: 4, decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle))),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text('Enjoying the game?', 
+                      style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 12),
+                    const Text('If you like Tambola Multiplayer,\nplease take a moment to rate us.', 
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4)),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (index) {
+                        return GestureDetector(
+                          onTap: () => setState(() => selectedStars = index + 1),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Icon(
+                              index < selectedStars ? Icons.star : Icons.star_border,
+                              color: Colors.amber,
+                              size: 36,
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text('Tap a star to rate', style: TextStyle(color: Colors.white30, fontSize: 12)),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.pop(context);
+                          final Uri url = Uri.parse('https://play.google.com/store/apps/details?id=com.housie.developerbros');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url, mode: LaunchMode.externalApplication);
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 8,
+                        ),
+                        child: const Text('Rate the App', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Maybe Later', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+        );
+      }
+    );
   }
 
   // Smart Prize Calculation Logic
@@ -174,6 +286,22 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF102A43),
+      extendBodyBehindAppBar: true,
+      appBar: CustomAppBar(
+        title: 'Game Results',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share, color: Colors.white),
+            onPressed: () => Share.share('Check out our Housie game results from room ${widget.room.roomName}!'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.home, color: Colors.white),
+            onPressed: () {
+              Navigator.popUntil(context, (route) => route.isFirst);
+            },
+          ),
+        ],
+      ),
       body: GeometricBackground(
         shapes: [
           BackgroundShapeItem(

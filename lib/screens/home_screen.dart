@@ -7,7 +7,9 @@ import '../widgets/geometric_background.dart';
 import '../services/persistence_service.dart';
 import '../services/game_service.dart';
 import '../services/version_check_service.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../widgets/custom_app_bar.dart';
+import '../widgets/app_drawer.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,83 +20,137 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? _lastSession;
+  final GlobalKey _hostKey = GlobalKey();
+  final GlobalKey _joinKey = GlobalKey();
+  final GlobalKey _menuKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
     _checkLastSession();
     _checkForUpdates();
+    _checkTutorial();
   }
 
-  Future<void> _checkForUpdates() async {
-    final updateInfo = await VersionCheckService().checkUpdate();
-    if (updateInfo != null && updateInfo['needsUpdate'] == true) {
-      if (!mounted) return;
-      _showUpdateDialog(
-        isMandatory: updateInfo['isMandatory'],
-        latestVersion: updateInfo['latestVersion'],
-        updateUrl: updateInfo['updateUrl'],
-      );
+  Future<void> _checkTutorial() async {
+    final hasSeen = await PersistenceService().hasSeenTutorial();
+    if (!hasSeen) {
+      Future.delayed(const Duration(milliseconds: 500), _showTutorial);
     }
   }
 
-  void _showUpdateDialog({
-    required bool isMandatory,
-    required String latestVersion,
-    required String updateUrl,
-  }) {
-    showDialog(
-      context: context,
-      barrierDismissible: !isMandatory,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => !isMandatory,
-        child: AlertDialog(
-          backgroundColor: const Color(0xFF1A2A4D),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-            isMandatory ? 'UPDATE REQUIRED' : 'UPDATE AVAILABLE',
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+  void _showTutorial() {
+    final targets = [
+      TargetFocus(
+        identify: "HostGame",
+        keyTarget: _hostKey,
+        alignSkip: Alignment.topRight,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return const Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Host a Game",
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Create a new game room and invite your friends to play!",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'A new version ($latestVersion) is available. Please update to continue enjoying the best experience.',
-                style: const TextStyle(color: Colors.white70),
-              ),
-              if (isMandatory) ...[
-                const SizedBox(height: 12),
-                const Text(
-                  'This update is required to keep playing.',
-                  style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-              ],
-            ],
-          ),
-          actions: [
-            if (!isMandatory)
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('LATER', style: TextStyle(color: Colors.white60)),
-              ),
-            ElevatedButton(
-              onPressed: () async {
-                final url = Uri.parse(updateUrl);
-                if (await canLaunchUrl(url)) {
-                  await launchUrl(url, mode: LaunchMode.externalApplication);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: const Text('UPDATE NOW', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
+        ],
       ),
-    );
+      TargetFocus(
+        identify: "JoinGame",
+        keyTarget: _joinKey,
+        alignSkip: Alignment.topRight,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return const Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Join a Game",
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Enter a Room ID or scan a QR code to join an existing game.",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "Menu",
+        keyTarget: _menuKey,
+        alignSkip: Alignment.bottomLeft,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return const Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Explore More",
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      "Access leaderboards, settings, and other features here.",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    ];
+
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: const Color(0xFF0D1B3E),
+      textSkip: "SKIP",
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        PersistenceService().markTutorialAsSeen();
+      },
+      onClickTarget: (target) {
+        // Continue
+      },
+      onSkip: () {
+        PersistenceService().markTutorialAsSeen();
+        return true;
+      },
+    )..show(context: context);
+  }
+
+  Future<void> _checkForUpdates() async {
+    await VersionCheckService().checkForUpdates();
   }
 
   Future<void> _checkLastSession() async {
@@ -165,19 +221,35 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0D1B3E),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      extendBodyBehindAppBar: true,
+      appBar: CustomAppBar(
+        showBackButton: false,
         actions: [
           Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.menu, color: Colors.white),
-              onPressed: () => Scaffold.of(context).openEndDrawer(),
+            builder: (context) => Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Center(
+                child: InkWell(
+                  key: _menuKey,
+                  onTap: () => Scaffold.of(context).openEndDrawer(),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1B2845),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white10),
+                    ),
+                    child: const Icon(Icons.menu, color: Colors.white, size: 28),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
       ),
-      endDrawer: _buildDrawer(context),
+      endDrawer: const AppDrawer(),
       body: GeometricBackground(
         shapes: [
           BackgroundShapeItem(
@@ -237,6 +309,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 20),
                 ],
                 _MenuButton(
+                  key: _hostKey,
                   label: 'HOST A GAME',
                   icon: Icons.add_circle_outline,
                   color: Colors.amber,
@@ -249,6 +322,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 20),
                 _MenuButton(
+                  key: _joinKey,
                   label: 'JOIN A GAME',
                   icon: Icons.group_add_outlined,
                   color: Colors.cyanAccent,
@@ -266,166 +340,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      backgroundColor: const Color(0xFF0D1B3E),
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(color: Color(0xFF1A2A4D)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset('assets/images/logo.jpg', height: 60, width: 60),
-                ),
-                const SizedBox(height: 12),
-                const Text('Housie Multiplayer', 
-                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                const Text('v1.0.0', style: TextStyle(color: Colors.white54, fontSize: 12)),
-              ],
-            ),
-          ),
-          _DrawerItem(
-            icon: Icons.help_outline,
-            label: 'How to Play',
-            onTap: () => _showHowToPlay(context),
-          ),
-          _DrawerItem(
-            icon: Icons.info_outline,
-            label: 'About App',
-            onTap: () => _showAbout(context),
-          ),
-          _DrawerItem(
-            icon: Icons.copyright,
-            label: 'Copyright',
-            onTap: () => _showCopyright(context),
-          ),
-          _DrawerItem(
-            icon: Icons.settings_outlined,
-            label: 'Reset Session',
-            onTap: () async {
-              await PersistenceService().clearSession();
-              if (context.mounted) {
-                setState(() => _lastSession = null);
-                Navigator.pop(context);
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showHowToPlay(BuildContext context) {
-    Navigator.pop(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('HOW TO PLAY', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _ruleSection('1. Number Range', 'The game uses numbers from 1 to 90.'),
-              _ruleSection('2. Your Ticket', 'Each ticket is a 3x9 grid with 15 numbers. Every column has at least one number.'),
-              _ruleSection('3. Gameplay', 'Keep an eye on the central number. If it appears on your ticket, tap it!'),
-              _ruleSection('4. Winning Patterns', 'Claim prizes whenever you complete these:\n\n'
-                  '• Early 5: First 5 numbers marked.\n'
-                  '• Top Line: All numbers in the 1st row.\n'
-                  '• Middle Line: All numbers in the 2nd row.\n'
-                  '• Bottom Line: All numbers in the 3rd row.\n'
-                  '• Full House: All 15 numbers marked.'),
-              _ruleSection('5. Claiming', 'Be fast! Click "CLAIM" on your ticket once you hit a pattern. Only the first valid claim wins!'),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('GOT IT', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _ruleSection(String title, String desc) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 14)),
-          const SizedBox(height: 4),
-          Text(desc, style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4)),
-        ],
-      ),
-    );
-  }
-
-  void _showAbout(BuildContext context) {
-    Navigator.pop(context);
-    showAboutDialog(
-      context: context,
-      applicationName: 'Housie Multiplayer',
-      applicationVersion: '1.0.0',
-      applicationIcon: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.asset('assets/images/logo.jpg', height: 40, width: 40),
-      ),
-      children: const [
-        Text('Housie Multiplayer is a premium, real-time bingo experience built for speed and fun. Play with friends or host big groups effortlessly!'),
-      ],
-    );
-  }
-
-  void _showCopyright(BuildContext context) {
-    Navigator.pop(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('COPYRIGHT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: const Text(
-          '© 2026 Housie Multiplayer Team. All rights reserved.\n\n'
-          'Unauthorized reproduction or redistribution of this software is strictly prohibited.',
-          style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CLOSE', style: TextStyle(color: Colors.white60)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DrawerItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _DrawerItem({required this.icon, required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.amber, size: 22),
-      title: Text(label, style: const TextStyle(color: Colors.white, fontSize: 15)),
-      onTap: onTap,
-    );
-  }
 }
 
 class _MenuButton extends StatelessWidget {
@@ -435,6 +349,7 @@ class _MenuButton extends StatelessWidget {
   final VoidCallback onPressed;
 
   const _MenuButton({
+    super.key,
     required this.label,
     required this.icon,
     required this.color,

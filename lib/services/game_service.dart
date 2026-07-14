@@ -27,25 +27,37 @@ class GameService {
     await _dbRef.child(cleanId).set(room.toMap());
   }
 
-  Future<bool> joinRoom(String roomId, Player player) async {
+  Future<String?> joinRoom(String roomId, Player player) async {
     await _ensureAuthenticated();
     final cleanId = roomId.trim().toUpperCase();
     final playerNameClean = player.name.trim().toUpperCase();
 
     // 1. Check if room exists
     final snap = await _dbRef.child(cleanId).child('roomId').get();
-    if (!snap.exists) return false;
+    if (!snap.exists) return "Room not found!";
 
-    // 2. Write player data (UID is already in the player object from calling code)
+    // 2. Check if name is already taken by another player (different UID)
+    final playerSnap = await _dbRef.child(cleanId).child('players').child(playerNameClean).get();
+    if (playerSnap.exists) {
+      final val = playerSnap.value;
+      if (val is Map) {
+        final existingUid = val['uid'];
+        if (existingUid != player.uid) {
+          return "Name already taken in this room! Please use a different name.";
+        }
+      }
+    }
+
+    // 3. Write player data
     await _dbRef.child(cleanId).child('players').child(playerNameClean).set(player.toMap());
 
-    // 3. Setup presence
+    // 4. Setup presence
     _dbRef.child(cleanId).child('players').child(playerNameClean).onDisconnect().update({
       'isOnline': false,
     });
     
     debugPrint('Firebase: Player ${player.name} joined $cleanId (UID: ${player.uid})');
-    return true;
+    return null;
   }
 
   Future<void> updatePlayerStatus(String roomId, String playerName, bool isOnline) async {
@@ -186,19 +198,20 @@ class GameService {
     return "Room not found!";
   }
 
-  Future<void> promoteNewHost(String roomId, String newHostName) async {
+  Future<void> promoteNewHost(String roomId, String newHostName, String newHostUid) async {
     final cleanId = roomId.trim().toUpperCase();
     final newHostKey = newHostName.trim().toUpperCase();
     
     await _dbRef.child(cleanId).update({
       'hostName': newHostName,
+      'hostUid': newHostUid,
     });
     
     await _dbRef.child(cleanId).child('players').child(newHostKey).update({
       'isHost': true,
     });
     
-    debugPrint('Firebase: Promoted $newHostName to Host in $cleanId');
+    debugPrint('Firebase: Promoted $newHostName to Host in $cleanId (UID: $newHostUid)');
   }
 
   // Generate a pool of 6 tickets for selection

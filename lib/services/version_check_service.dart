@@ -1,55 +1,40 @@
-import 'package:firebase_database/firebase_database.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:in_app_update/in_app_update.dart';
 
 class VersionCheckService {
-  final _database = FirebaseDatabase.instance.ref('config/app_update');
+  /// Checks for updates on the Google Play Store and triggers the native prompt.
+  /// This is only supported on Android.
+  Future<void> checkForUpdates() async {
+    // Platform guard: In-app updates are Android-only
+    if (!Platform.isAndroid) {
+      debugPrint('VersionCheckService: In-app updates are only supported on Android.');
+      return;
+    }
 
-  Future<Map<String, dynamic>?> checkUpdate() async {
     try {
-      final snapshot = await _database.get();
-      if (!snapshot.exists) return null;
-
-      final data = Map<String, dynamic>.from(snapshot.value as Map);
-      final latestVersion = data['latest_version'] as String;
-      final minRequiredVersion = data['min_required_version'] as String;
-      final updateUrl = data['update_url'] as String;
-      final forceUpdate = data['force_update'] as bool? ?? false;
-
-      final packageInfo = await PackageInfo.fromPlatform();
-      final currentVersion = packageInfo.version;
-
-      final needsUpdate = _isVersionLower(currentVersion, latestVersion);
-      final isMandatory = _isVersionLower(currentVersion, minRequiredVersion) || forceUpdate;
-
-      if (needsUpdate) {
-        return {
-          'needsUpdate': true,
-          'isMandatory': isMandatory,
-          'latestVersion': latestVersion,
-          'updateUrl': updateUrl,
-        };
+      debugPrint('VersionCheckService: Checking for updates on Google Play Store...');
+      final info = await InAppUpdate.checkForUpdate();
+      
+      if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+        debugPrint('VersionCheckService: Update is available. Version Code: ${info.availableVersionCode}');
+        
+        if (info.immediateUpdateAllowed) {
+          debugPrint('VersionCheckService: Performing immediate (mandatory) update...');
+          await InAppUpdate.performImmediateUpdate();
+        } else if (info.flexibleUpdateAllowed) {
+          debugPrint('VersionCheckService: Starting flexible (background) update...');
+          await InAppUpdate.startFlexibleUpdate();
+          debugPrint('VersionCheckService: Flexible update download complete. Prompting user to install...');
+          await InAppUpdate.completeFlexibleUpdate();
+        } else {
+          debugPrint('VersionCheckService: Update available but neither immediate nor flexible updates are allowed.');
+        }
+      } else {
+        debugPrint('VersionCheckService: App is up to date.');
       }
     } catch (e) {
-      print('Error checking for updates: $e');
+      debugPrint('VersionCheckService: Error checking or performing in-app update: $e');
     }
-    return {'needsUpdate': false};
-  }
-
-  bool _isVersionLower(String current, String latest) {
-    try {
-      final currentParts = current.split('.').map(int.parse).toList();
-      final latestParts = latest.split('.').map(int.parse).toList();
-
-      for (var i = 0; i < 3; i++) {
-        final currentPart = i < currentParts.length ? currentParts[i] : 0;
-        final latestPart = i < latestParts.length ? latestParts[i] : 0;
-
-        if (currentPart < latestPart) return true;
-        if (currentPart > latestPart) return false;
-      }
-    } catch (e) {
-      print('Version parsing error: $e');
-    }
-    return false;
   }
 }

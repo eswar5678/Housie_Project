@@ -1,36 +1,43 @@
 {
-    "rules": {
-        "rooms": {
-            "$roomId": {
-                ".read": "auth != null",
-                ".write": "auth != null && !data.exists()",
-                "players": {
-                    "$playerName": {
-                        ".write": "auth != null && (!data.exists() || data.child('uid').val() == auth.uid)"
-                    }
-                },
-                "status": {
-                    ".write": "auth != null"
-                },
-                "calledNumbers": {
-                    ".write": "auth != null"
-                },
-                "currentNumber": {
-                    ".write": "auth != null"
-                },
-                "claims": {
-                    ".write": "auth != null"
-                },
-                "lastCallTimestamp": {
-                    ".write": "auth != null"
-                },
-                "gameStartTimestamp": {
-                    ".write": "auth != null"
-                },
-                "hostName": {
-                    ".write": "auth != null"
-                }
-            }
+  "rules": {
+    "rooms": {
+      "$roomId": {
+        ".read": "auth != null",
+        ".write": "auth != null && (!data.exists() && newData.child('hostUid').val() == auth.uid || data.exists() && data.child('hostUid').val() == auth.uid && !newData.exists())",
+        "players": {
+          "$playerName": {
+            ".write": "auth != null && (!data.exists() || data.child('uid').val() == auth.uid || data.parent().parent().child('hostUid').val() == auth.uid)"
+          }
+        },
+        "status": {
+          ".write": "auth != null && (data.parent().child('hostUid').val() == auth.uid || newData.val() == 'finished')"
+        },
+        "calledNumbers": {
+          ".write": "auth != null && data.parent().child('hostUid').val() == auth.uid"
+        },
+        "currentNumber": {
+          ".write": "auth != null && data.parent().child('hostUid').val() == auth.uid"
+        },
+        "claims": {
+          ".write": "auth != null",
+          "$claimIndex": {
+            ".write": "auth != null && !data.exists()",
+            ".validate": "newData.child('playerName').val() != null && root.child('rooms').child($roomId).child('players').child(newData.child('playerName').val().toUpperCase()).child('uid').val() == auth.uid"
+          }
+        },
+        "lastCallTimestamp": {
+          ".write": "auth != null && data.parent().child('hostUid').val() == auth.uid"
+        },
+        "gameStartTimestamp": {
+          ".write": "auth != null && data.parent().child('hostUid').val() == auth.uid"
+        },
+        "hostName": {
+          ".write": "auth != null && data.parent().child('hostUid').val() == auth.uid"
+        },
+        "hostUid": {
+          ".write": "auth != null && data.parent().child('hostUid').val() == auth.uid"
         }
+      }
     }
+  }
 }

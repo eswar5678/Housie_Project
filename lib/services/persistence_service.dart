@@ -42,4 +42,55 @@ class PersistenceService {
     await prefs.remove(_keyPlayerName);
     await prefs.remove(_keyIsHost);
   }
+
+  static const String _keyDefaultPlayerName = 'default_player_name';
+  static const String _keyHasSeenTutorial = 'has_seen_tutorial';
+
+  Future<bool> hasSeenTutorial() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyHasSeenTutorial) ?? false;
+  }
+
+  Future<void> markTutorialAsSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyHasSeenTutorial, true);
+  }
+
+  Future<void> saveDefaultPlayerName(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyDefaultPlayerName, name);
+  }
+
+  Future<String?> getDefaultPlayerName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyDefaultPlayerName);
+  }
+
+  static const String _keySoundEnabled = 'sound_enabled';
+  static const String _keyMusicEnabled = 'music_enabled';
+
+  Future<bool> isSoundEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keySoundEnabled) ?? true;
+  }
+
+  Future<void> setSoundEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keySoundEnabled, enabled);
+  }
+
+  Future<bool> isMusicEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyMusicEnabled) ?? true;
+  }
+
+  Future<void> setMusicEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyMusicEnabled, enabled);
+  }
+
+  Future<void> resetTutorial() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyHasSeenTutorial, false);
+  }
 }

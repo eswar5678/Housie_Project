@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../models/room.dart';
 import '../services/game_service.dart';
 import '../services/persistence_service.dart';
@@ -27,6 +28,8 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   final Map<int, Set<int>> _ticketMarkings = {};
   bool _isSoundOn = true;
+  final FlutterTts _flutterTts = FlutterTts();
+  int? _lastSpokenNumber;
   
   // Countdown and auto-calling state
   Timer? _countdownTimer;
@@ -67,6 +70,13 @@ class _GameScreenState extends State<GameScreen> {
         if (mounted) {
           _detectNewClaims(room);
           
+          if (_room == null) {
+            _lastSpokenNumber = room.currentNumber;
+          } else if (_isSoundOn && room.currentNumber != null && room.currentNumber != _lastSpokenNumber) {
+            _lastSpokenNumber = room.currentNumber;
+            _speakNumber(room.currentNumber!);
+          }
+
           setState(() {
             _room = room;
             _latestRoom = room;
@@ -126,6 +136,17 @@ class _GameScreenState extends State<GameScreen> {
         _shownClaimKeys.add(key);
         _triggerClaimNotification(claim);
       }
+    }
+  }
+
+  Future<void> _speakNumber(int number) async {
+    try {
+      await _flutterTts.setLanguage("en-US");
+      await _flutterTts.setSpeechRate(0.45); // Slower rate for clear pronunciation
+      await _flutterTts.setVolume(1.0);
+      await _flutterTts.speak(number.toString());
+    } catch (e) {
+      debugPrint("TTS speaking error: $e");
     }
   }
 
@@ -365,7 +386,8 @@ class _GameScreenState extends State<GameScreen> {
       if (players.isNotEmpty) {
         final newHost = players.first;
         debugPrint('Host $hostKey left. Promoting $newHost to Host.');
-        GameService().promoteNewHost(widget.roomId, room.players[newHost]!.name).then((_) {
+        final playerObj = room.players[newHost]!;
+        GameService().promoteNewHost(widget.roomId, playerObj.name, playerObj.uid).then((_) {
           _isPromoting = false;
         });
       }

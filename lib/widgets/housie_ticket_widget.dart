@@ -19,27 +19,27 @@ class HousieTicketWidget extends StatelessWidget {
       width: double.infinity, // Fill parent width (compatible with GridView cells)
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05), width: 1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF94A3B8), width: 1.5), // Slate border
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 10,
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         child: GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(4),
+          padding: EdgeInsets.zero,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 9,
             childAspectRatio: 1.0, // Square cells for responsive height
-            crossAxisSpacing: 1,
-            mainAxisSpacing: 1,
+            crossAxisSpacing: 0,
+            mainAxisSpacing: 0,
           ),
           itemCount: 27,
           itemBuilder: (context, index) {
@@ -50,7 +50,13 @@ class HousieTicketWidget extends StatelessWidget {
               onTap: number != 0 ? () => onNumberTap?.call(index) : null,
               child: Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.blue.withValues(alpha: 0.1), width: 0.5),
+                  color: number == 0 
+                      ? const Color(0xFFF1F5F9) // Shaded empty slate blocks
+                      : Colors.white, // High-contrast number blocks
+                  border: Border.all(
+                    color: const Color(0xFFCBD5E1), // Defined visible grid lines
+                    width: 0.75,
+                  ),
                 ),
                 child: Stack(
                   alignment: Alignment.center,
@@ -59,10 +65,12 @@ class HousieTicketWidget extends StatelessWidget {
                       Text(
                         number.toString(),
                         style: TextStyle(
-                          color: const Color(0xFF1E88E5), // Reference Blue
+                          color: const Color(0xFF0F172A), // Dark charcoal/slate
                           fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                          fontSize: 16,
                           decoration: isMarked ? TextDecoration.lineThrough : null,
+                          decorationColor: Colors.redAccent,
+                          decorationThickness: 2,
                         ),
                       ),
                     if (isMarked)
