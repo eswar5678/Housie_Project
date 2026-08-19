@@ -41,10 +41,16 @@ void main() async {
     }
     debugPrint('Firebase initialized successfully.');
 
-    // Silent anonymous auth at startup to avoid permission issues
-    if (FirebaseAuth.instance.currentUser == null) {
-      debugPrint('Firebase: Silent login at startup...');
-      await FirebaseAuth.instance.signInAnonymously();
+    // Silent anonymous auth at startup to avoid permission issues.
+    // If it fails (e.g. the web origin is not yet authorized in Firebase),
+    // log and continue so the UI still renders instead of a dead screen.
+    try {
+      if (FirebaseAuth.instance.currentUser == null) {
+        debugPrint('Firebase: Silent login at startup...');
+        await FirebaseAuth.instance.signInAnonymously();
+      }
+    } catch (e) {
+      debugPrint('Firebase: Anonymous sign-in failed (continuing without auth): $e');
     }
 
     runApp(const ProviderScope(child: MyApp()));

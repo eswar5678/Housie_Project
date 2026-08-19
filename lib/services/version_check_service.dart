@@ -1,13 +1,15 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:in_app_update/in_app_update.dart';
 
 class VersionCheckService {
   /// Checks for updates on the Google Play Store and triggers the native prompt.
-  /// This is only supported on Android.
+  /// In-app updates are Android-only; on other platforms (including web) this
+  /// is a no-op.
   Future<void> checkForUpdates() async {
-    // Platform guard: In-app updates are Android-only
-    if (!Platform.isAndroid) {
+    // Platform guard: in-app updates are only supported on Android.
+    // Uses kIsWeb + defaultTargetPlatform instead of dart:io's Platform so the
+    // code also compiles and runs on the web.
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
       debugPrint('VersionCheckService: In-app updates are only supported on Android.');
       return;
     }
@@ -15,10 +17,10 @@ class VersionCheckService {
     try {
       debugPrint('VersionCheckService: Checking for updates on Google Play Store...');
       final info = await InAppUpdate.checkForUpdate();
-      
+
       if (info.updateAvailability == UpdateAvailability.updateAvailable) {
         debugPrint('VersionCheckService: Update is available. Version Code: ${info.availableVersionCode}');
-        
+
         if (info.immediateUpdateAllowed) {
           debugPrint('VersionCheckService: Performing immediate (mandatory) update...');
           await InAppUpdate.performImmediateUpdate();
