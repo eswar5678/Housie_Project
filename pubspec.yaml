@@ -75,6 +75,11 @@ flutter:
   assets:
     - assets/images/logo.jpg
 
+  fonts:
+    - family: Outfit
+      fonts:
+        - asset: assets/fonts/Outfit.ttf
+
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true

@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../../models/room.dart';
 import '../../services/game_service.dart';
 import '../../core/widgets/custom_app_bar.dart';
-import '../../core/widgets/geometric_background.dart';
+import '../../core/widgets/app_background.dart';
+import '../../core/widgets/glow_button.dart';
 import '../../core/widgets/housie_ticket_widget.dart';
 import '../../core/widgets/app_panel.dart';
 import '../../core/theme/app_theme.dart';
@@ -98,24 +99,7 @@ class _TicketSelectionScreenState extends State<TicketSelectionScreen> {
       backgroundColor: AppColors.background,
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(),
-      body: GeometricBackground(
-        shapes: [
-          BackgroundShapeItem(
-            shape: BackgroundShape.circle,
-            color: AppColors.secondary,
-            size: 300,
-            top: -100,
-            left: -100,
-          ),
-          BackgroundShapeItem(
-            shape: BackgroundShape.hexagon,
-            color: AppColors.primary,
-            size: 200,
-            bottom: -50,
-            right: -50,
-            rotation: 0.5,
-          ),
-        ],
+      body: AppBackground(
         child: SafeArea(
           bottom: false,
           child: Padding(
@@ -300,40 +284,14 @@ class _TicketSelectionScreenState extends State<TicketSelectionScreen> {
             ),
           ],
           const Spacer(),
-          SizedBox(
+          GlowButton(
+            label: 'CONFIRM SELECTION',
+            icon: Icons.check_circle_rounded,
+            gradient: AppColors.successGradient,
+            glowColor: AppColors.success,
+            foregroundColor: AppColors.onAccent,
             height: 52,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-                boxShadow: _selectedIndices.isNotEmpty
-                    ? [
-                        BoxShadow(
-                          color: AppColors.success.withValues(alpha: 0.25),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
-                        )
-                      ]
-                    : [],
-              ),
-              child: ElevatedButton(
-                onPressed: _selectedIndices.isNotEmpty ? _confirmSelection : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.success,
-                  disabledBackgroundColor: Colors.white.withValues(alpha: 0.08),
-                  foregroundColor: AppColors.onAccent,
-                  disabledForegroundColor: Colors.white30,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'CONFIRM SELECTION →',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.1),
-                ),
-              ),
-            ),
+            onPressed: _selectedIndices.isNotEmpty ? _confirmSelection : null,
           ),
         ],
       ),

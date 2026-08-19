@@ -9,7 +9,8 @@ import '../../models/room.dart';
 import '../../services/game_service.dart';
 import '../../services/persistence_service.dart';
 import '../../core/widgets/housie_ticket_widget.dart';
-import '../../core/widgets/geometric_background.dart';
+import '../../core/widgets/app_background.dart';
+import '../../core/widgets/glow_button.dart';
 import '../../core/theme/app_theme.dart';
 import '../results/results_screen.dart';
 import 'game_ui_controller.dart';
@@ -605,29 +606,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          GeometricBackground(
-            shapes: [
-              BackgroundShapeItem(
-                  shape: BackgroundShape.circle,
-                  color: AppColors.secondary,
-                  size: 200,
-                  top: -50,
-                  left: -50),
-              BackgroundShapeItem(
-                  shape: BackgroundShape.hexagon,
-                  color: AppColors.primary,
-                  size: 150,
-                  bottom: 100,
-                  right: -30),
-              BackgroundShapeItem(
-                  shape: BackgroundShape.square,
-                  color: AppColors.primaryDark,
-                  size: 100,
-                  top: 150,
-                  right: 20),
-            ],
-            child: const SizedBox.expand(),
-          ),
+          AppBackground(child: const SizedBox.expand()),
           SafeArea(
             child: Column(
               children: [
@@ -789,25 +768,17 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                               ),
                               const Spacer(),
                               SizedBox(
+                                width: 108,
                                 height: 34,
-                                child: ElevatedButton(
+                                child: GlowButton(
+                                  label: 'Claim',
+                                  gradient: AppColors.dangerGradient,
+                                  glowColor: AppColors.danger,
+                                  foregroundColor: Colors.white,
+                                  height: 34,
+                                  fontSize: 12,
+                                  padding: const EdgeInsets.symmetric(horizontal: 14),
                                   onPressed: () => _showClaimDialog(index, room),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFFF7043),
-                                    foregroundColor: Colors.white,
-                                    padding:
-                                        const EdgeInsets.symmetric(horizontal: 16),
-                                    minimumSize: const Size(0, 34),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(AppDimens.radiusPill),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'Claim',
-                                    style: TextStyle(
-                                        fontSize: 12, fontWeight: FontWeight.bold),
-                                  ),
                                 ),
                               ),
                             ],

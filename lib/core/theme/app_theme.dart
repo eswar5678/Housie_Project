@@ -6,7 +6,7 @@ import 'app_dimens.dart';
 export 'app_colors.dart';
 export 'app_dimens.dart';
 
-/// Builds the app's single dark Material 3 theme.
+/// Builds the app's single dark "Aurora Lounge" Material 3 theme.
 class AppTheme {
   AppTheme._();
 
@@ -16,6 +16,7 @@ class AppTheme {
       brightness: Brightness.dark,
       primary: AppColors.primary,
       secondary: AppColors.secondary,
+      tertiary: AppColors.fuchsia,
       surface: AppColors.surface,
       error: AppColors.danger,
     );
@@ -25,7 +26,7 @@ class AppTheme {
       brightness: Brightness.dark,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
-      fontFamily: 'Roboto',
+      fontFamily: 'Outfit',
       splashFactory: InkRipple.splashFactory,
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -34,9 +35,9 @@ class AppTheme {
         iconTheme: IconThemeData(color: AppColors.textPrimary),
         titleTextStyle: TextStyle(
           color: AppColors.textPrimary,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w700,
           fontSize: 18,
-          letterSpacing: 1.2,
+          letterSpacing: 1.1,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -60,6 +61,9 @@ class AppTheme {
           horizontal: AppDimens.md,
           vertical: 14,
         ),
+        hintStyle: TextStyle(
+          color: AppColors.textPrimary.withValues(alpha: 0.3),
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimens.radiusMd),
           borderSide: BorderSide.none,
@@ -82,7 +86,8 @@ class AppTheme {
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppDimens.radiusXl)),
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(AppDimens.radiusXl)),
         ),
       ),
       snackBarTheme: const SnackBarThemeData(
@@ -96,12 +101,12 @@ class AppTheme {
       textTheme: const TextTheme(
         headlineMedium: TextStyle(
           color: AppColors.textPrimary,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w800,
           letterSpacing: 1.0,
         ),
         titleLarge: TextStyle(
           color: AppColors.textPrimary,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w700,
         ),
         bodyMedium: TextStyle(color: AppColors.textSecondary),
         bodySmall: TextStyle(color: AppColors.textMuted),

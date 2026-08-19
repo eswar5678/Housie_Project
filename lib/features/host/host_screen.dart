@@ -4,7 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/room.dart';
 import '../../services/game_service.dart';
 import '../../services/persistence_service.dart';
-import '../../core/widgets/geometric_background.dart';
+import '../../core/widgets/app_background.dart';
+import '../../core/widgets/glow_button.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/app_panel.dart';
 import '../../core/theme/app_theme.dart';
@@ -90,25 +91,7 @@ class _HostScreenState extends State<HostScreen> {
       backgroundColor: AppColors.background,
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(),
-      body: GeometricBackground(
-        shapes: [
-          BackgroundShapeItem(
-            shape: BackgroundShape.square,
-            color: AppColors.secondary,
-            size: 150,
-            top: 50,
-            right: -40,
-            rotation: 0.4,
-          ),
-          BackgroundShapeItem(
-            shape: BackgroundShape.triangle,
-            color: AppColors.primary,
-            size: 100,
-            bottom: 50,
-            left: 20,
-            rotation: -0.2,
-          ),
-        ],
+      body: AppBackground(
         child: SafeArea(
           bottom: false,
           child: SingleChildScrollView(
@@ -193,23 +176,14 @@ class _HostScreenState extends State<HostScreen> {
                   hint: 'Eswar',
                 ),
                 const SizedBox(height: AppDimens.lg),
-                SizedBox(
+                GlowButton(
+                  label: 'Create Room',
+                  icon: Icons.add_circle_rounded,
+                  gradient: AppColors.goldGradient,
+                  glowColor: AppColors.accent,
+                  foregroundColor: AppColors.onAccent,
                   height: 52,
-                  child: ElevatedButton(
-                    onPressed: _createRoom,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accent,
-                      foregroundColor: AppColors.onAccent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Create Room →',
-                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                  onPressed: _createRoom,
                 ),
               ],
             ),

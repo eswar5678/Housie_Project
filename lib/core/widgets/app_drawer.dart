@@ -182,7 +182,7 @@ class _AppDrawerState extends State<AppDrawer> {
       margin: const EdgeInsets.all(16.0),
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF1B2845),
+        color: AppColors.surfaceHigh,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -300,7 +300,7 @@ class _AppDrawerState extends State<AppDrawer> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF162A45),
+        backgroundColor: AppColors.surfaceHigh,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         titlePadding: const EdgeInsets.only(top: 20, left: 24, right: 24),
         contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -401,7 +401,7 @@ class _AppDrawerState extends State<AppDrawer> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
-            backgroundColor: const Color(0xFF162A45),
+            backgroundColor: AppColors.surfaceHigh,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             title: Row(
               children: [
@@ -548,7 +548,7 @@ class _AppDrawerState extends State<AppDrawer> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF162A45),
+        backgroundColor: AppColors.surfaceHigh,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Row(
           children: [
@@ -601,7 +601,7 @@ class _AppDrawerState extends State<AppDrawer> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF162A45),
+        backgroundColor: AppColors.surfaceHigh,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -680,7 +680,7 @@ class _DrawerItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
-        color: isSelected || isComingSoon ? const Color(0xFF2A3B5A) : Colors.transparent,
+        color: isSelected || isComingSoon ? AppColors.surfaceHigh : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),
       child: ListTile(

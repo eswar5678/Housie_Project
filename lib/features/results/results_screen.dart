@@ -3,7 +3,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../models/room.dart';
-import '../../core/widgets/geometric_background.dart';
+import '../../core/widgets/app_background.dart';
+import '../../core/widgets/glow_button.dart';
 import '../../core/widgets/housie_ticket_widget.dart';
 import '../../core/widgets/app_panel.dart';
 import '../../services/persistence_service.dart';
@@ -318,24 +319,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
           ),
         ],
       ),
-      body: GeometricBackground(
-        shapes: [
-          BackgroundShapeItem(
-            shape: BackgroundShape.circle,
-            color: AppColors.secondary,
-            size: 300,
-            top: -100,
-            left: -100,
-          ),
-          BackgroundShapeItem(
-            shape: BackgroundShape.hexagon,
-            color: AppColors.primary,
-            size: 200,
-            bottom: -50,
-            right: -50,
-            rotation: 0.5,
-          ),
-        ],
+      body: AppBackground(
         child: SafeArea(
           bottom: false,
           child: Column(
@@ -377,7 +361,13 @@ class _ResultsScreenState extends State<ResultsScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: ElevatedButton(
+                child: GlowButton(
+                  label: 'BACK TO HOME',
+                  icon: Icons.home_rounded,
+                  gradient: AppColors.goldGradient,
+                  glowColor: AppColors.accent,
+                  foregroundColor: AppColors.onAccent,
+                  height: 52,
                   onPressed: () async {
                     final navigator = Navigator.of(context);
                     if (_isHost) {
@@ -385,17 +375,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
                     }
                     navigator.popUntil((route) => route.isFirst);
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: AppColors.onAccent,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    elevation: 8,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-                    ),
-                  ),
-                  child: const Text('BACK TO HOME',
-                      style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
                 ),
               ),
             ],

@@ -8,7 +8,8 @@ import '../../services/persistence_service.dart';
 import '../../core/widgets/housie_ticket_widget.dart';
 import '../../core/widgets/star_loader.dart';
 import '../../core/widgets/custom_app_bar.dart';
-import '../../core/widgets/geometric_background.dart';
+import '../../core/widgets/app_background.dart';
+import '../../core/widgets/glow_button.dart';
 import '../../core/widgets/app_panel.dart';
 import '../../core/theme/app_theme.dart';
 import '../game/game_screen.dart';
@@ -292,29 +293,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                 ),
               ],
             ),
-            body: GeometricBackground(
-              shapes: [
-                BackgroundShapeItem(
-                    shape: BackgroundShape.triangle,
-                    color: AppColors.secondary,
-                    size: 250,
-                    top: -100,
-                    right: -50,
-                    rotation: 0.2),
-                BackgroundShapeItem(
-                    shape: BackgroundShape.circle,
-                    color: const Color(0xFF1E88E5),
-                    size: 180,
-                    bottom: -40,
-                    left: -30),
-                BackgroundShapeItem(
-                    shape: BackgroundShape.hexagon,
-                    color: AppColors.primary,
-                    size: 120,
-                    top: 200,
-                    left: 10,
-                    rotation: -0.4),
-              ],
+            body: AppBackground(
               child: SafeArea(
                 bottom: false,
                 child: Column(
@@ -617,27 +596,18 @@ class _LobbyScreenState extends State<LobbyScreen> {
                   fontWeight: FontWeight.bold),
             ),
           ),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: canStart ? () => GameService().startGame(widget.roomId) : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.success,
-              foregroundColor: AppColors.onAccent,
-              disabledBackgroundColor: Colors.white.withValues(alpha: 0.08),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-              ),
-            ),
-            child: Text(
-              room.players.length < 2
-                  ? 'WAITING FOR PLAYERS...'
-                  : (allPicked ? 'START GAME' : 'WAITING FOR TICKETS...'),
-              style: const TextStyle(
-                  color: Colors.black, fontWeight: FontWeight.bold, fontSize: 17),
-            ),
-          ),
+        GlowButton(
+          label: room.players.length < 2
+              ? 'WAITING FOR PLAYERS...'
+              : (allPicked ? 'START GAME' : 'WAITING FOR TICKETS...'),
+          icon: Icons.play_arrow_rounded,
+          gradient: AppColors.successGradient,
+          glowColor: AppColors.success,
+          foregroundColor: AppColors.onAccent,
+          height: 54,
+          onPressed: canStart
+              ? () => GameService().startGame(widget.roomId)
+              : null,
         ),
       ],
     );

@@ -6,7 +6,8 @@ import '../../models/room.dart';
 import '../../services/game_service.dart';
 import '../../services/persistence_service.dart';
 import '../../core/widgets/custom_app_bar.dart';
-import '../../core/widgets/geometric_background.dart';
+import '../../core/widgets/app_background.dart';
+import '../../core/widgets/glow_button.dart';
 import '../../core/widgets/app_panel.dart';
 import '../../core/theme/app_theme.dart';
 import '../lobby/lobby_screen.dart';
@@ -125,24 +126,7 @@ class _JoinScreenState extends State<JoinScreen> {
       backgroundColor: AppColors.background,
       extendBodyBehindAppBar: true,
       appBar: const CustomAppBar(),
-      body: GeometricBackground(
-        shapes: [
-          BackgroundShapeItem(
-            shape: BackgroundShape.hexagon,
-            color: AppColors.secondary,
-            size: 200,
-            bottom: -50,
-            right: -30,
-            rotation: -0.3,
-          ),
-          BackgroundShapeItem(
-            shape: BackgroundShape.circle,
-            color: const Color(0xFF1E88E5),
-            size: 120,
-            top: 100,
-            left: -20,
-          ),
-        ],
+      body: AppBackground(
         child: SafeArea(
           bottom: false,
           child: SingleChildScrollView(
@@ -220,23 +204,14 @@ class _JoinScreenState extends State<JoinScreen> {
                   },
                 ),
                 const SizedBox(height: AppDimens.lg),
-                SizedBox(
+                GlowButton(
+                  label: 'Join Room',
+                  icon: Icons.login_rounded,
+                  gradient: AppColors.secondaryGradient,
+                  glowColor: AppColors.secondary,
+                  foregroundColor: AppColors.onAccent,
                   height: 52,
-                  child: ElevatedButton(
-                    onPressed: _joinRoom,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.secondary,
-                      foregroundColor: AppColors.onAccent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Join Room →',
-                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                  onPressed: _joinRoom,
                 ),
               ],
             ),
