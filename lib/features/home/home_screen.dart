@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
-import 'host_screen.dart';
-import 'join_screen.dart';
-import 'lobby_screen.dart';
-import '../features/game/game_screen.dart';
-import '../widgets/geometric_background.dart';
-import '../services/persistence_service.dart';
-import '../services/game_service.dart';
-import '../services/version_check_service.dart';
-import '../widgets/custom_app_bar.dart';
-import '../widgets/app_drawer.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+
+import '../host/host_screen.dart';
+import '../join/join_screen.dart';
+import '../lobby/lobby_screen.dart';
+import '../game/game_screen.dart';
+import '../../core/widgets/geometric_background.dart';
+import '../../core/widgets/custom_app_bar.dart';
+import '../../core/widgets/app_drawer.dart';
+import '../../core/theme/app_theme.dart';
+import '../../services/persistence_service.dart';
+import '../../services/game_service.dart';
+import '../../services/version_check_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -157,9 +159,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final session = await PersistenceService().getLastSession();
     if (session != null) {
       final roomId = session['roomId'];
-      // Use a more direct check or a timeout to avoid hangs
       try {
-        final room = await GameService().getRoomStream(roomId).first.timeout(const Duration(seconds: 3));
+        final room = await GameService()
+            .getRoomStream(roomId)
+            .first
+            .timeout(const Duration(seconds: 3));
         if (room != null && room.status != 'finished') {
           setState(() {
             _lastSession = session;
@@ -170,9 +174,9 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       } catch (e) {
         debugPrint('Error checking last session: $e');
-        // If timeout or error, keep the session for now? Or clear it?
-        // Let's keep it if we can't reach the server, maybe it's a temp network issue
-        setState(() { _lastSession = session; });
+        setState(() {
+          _lastSession = session;
+        });
       }
     }
   }
@@ -180,7 +184,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void _rejoinGame() {
     if (_lastSession == null) return;
 
-    // Check room status to decide which screen to push
     GameService().getRoomStream(_lastSession!['roomId']).first.then((room) {
       if (!mounted) return;
       if (room == null) {
@@ -220,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1B3E),
+      backgroundColor: AppColors.background,
       extendBodyBehindAppBar: true,
       appBar: CustomAppBar(
         showBackButton: false,
@@ -237,8 +240,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1B2845),
-                      borderRadius: BorderRadius.circular(16),
+                      color: AppColors.surfaceHigh,
+                      borderRadius: BorderRadius.circular(AppDimens.radiusLg),
                       border: Border.all(color: Colors.white10),
                     ),
                     child: const Icon(Icons.menu, color: Colors.white, size: 28),
@@ -254,14 +257,14 @@ class _HomeScreenState extends State<HomeScreen> {
         shapes: [
           BackgroundShapeItem(
             shape: BackgroundShape.circle,
-            color: const Color(0xFF4DB6AC),
+            color: AppColors.secondary,
             size: 300,
             top: -100,
             left: -50,
           ),
           BackgroundShapeItem(
             shape: BackgroundShape.triangle,
-            color: const Color(0xFF9575CD),
+            color: AppColors.primary,
             size: 150,
             bottom: 100,
             right: 20,
@@ -284,58 +287,123 @@ class _HomeScreenState extends State<HomeScreen> {
             rotation: 0.2,
           ),
         ],
-        child: SizedBox.expand(
-          child: SafeArea(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppDimens.xl),
+            child: Row(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(30),
-                  child: Image.asset(
-                    'assets/images/logo.jpg',
-                    height: 200,
-                    width: 200,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                const SizedBox(height: 60),
-                if (_lastSession != null) ...[
-                  _MenuButton(
-                    label: 'REJOIN GAME',
-                    icon: Icons.refresh,
-                    color: Colors.greenAccent,
-                    onPressed: _rejoinGame,
-                  ),
-                  const SizedBox(height: 20),
-                ],
-                _MenuButton(
-                  key: _hostKey,
-                  label: 'HOST A GAME',
-                  icon: Icons.add_circle_outline,
-                  color: Colors.amber,
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const HostScreen()),
-                    ).then((_) => _checkLastSession());
-                  },
-                ),
-                const SizedBox(height: 20),
-                _MenuButton(
-                  key: _joinKey,
-                  label: 'JOIN A GAME',
-                  icon: Icons.group_add_outlined,
-                  color: Colors.cyanAccent,
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const JoinScreen()),
-                    ).then((_) => _checkLastSession());
-                  },
-                ),
+                Expanded(flex: 5, child: _buildBrandPanel()),
+                const SizedBox(width: AppDimens.xl),
+                Expanded(flex: 5, child: _buildActionsPanel()),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBrandPanel() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: Image.asset(
+              'assets/images/logo.jpg',
+              height: 140,
+              width: 140,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(height: AppDimens.lg),
+          const Text(
+            'HOUSIE MULTIPLAYER',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(height: AppDimens.sm),
+          const Text(
+            'Real-time Tambola, reimagined for groups.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+          ),
+          if (_lastSession != null) ...[
+            const SizedBox(height: AppDimens.lg),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppDimens.radiusPill),
+                border: Border.all(color: AppColors.success.withValues(alpha: 0.4)),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.play_circle, color: AppColors.success, size: 16),
+                  SizedBox(width: 6),
+                  Text(
+                    'You have an active game',
+                    style: TextStyle(color: AppColors.success, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionsPanel() {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_lastSession != null) ...[
+              _MenuButton(
+                label: 'REJOIN GAME',
+                icon: Icons.refresh,
+                color: Colors.greenAccent,
+                onPressed: _rejoinGame,
+              ),
+              const SizedBox(height: 16),
+            ],
+            _MenuButton(
+              key: _hostKey,
+              label: 'HOST A GAME',
+              icon: Icons.add_circle_outline,
+              color: Colors.amber,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HostScreen()),
+                ).then((_) => _checkLastSession());
+              },
+            ),
+            const SizedBox(height: 16),
+            _MenuButton(
+              key: _joinKey,
+              label: 'JOIN A GAME',
+              icon: Icons.group_add_outlined,
+              color: Colors.cyanAccent,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const JoinScreen()),
+                ).then((_) => _checkLastSession());
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -359,7 +427,6 @@ class _MenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 280,
       height: 60,
       child: ElevatedButton.icon(
         onPressed: onPressed,
@@ -367,7 +434,7 @@ class _MenuButton extends StatelessWidget {
         label: Text(
           label,
           style: const TextStyle(
-            fontSize: 18,
+            fontSize: 17,
             fontWeight: FontWeight.bold,
             color: Colors.black87,
           ),
@@ -375,7 +442,7 @@ class _MenuButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(AppDimens.radiusPill),
           ),
           elevation: 8,
         ),

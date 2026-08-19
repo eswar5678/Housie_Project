@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
   final List<Widget>? actions;
@@ -20,13 +22,20 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       title: title != null
-          ? Text(title!, style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.white))
+          ? Text(
+              title!,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+                color: AppColors.textPrimary,
+              ),
+            )
           : null,
       centerTitle: centerTitle,
       backgroundColor: Colors.transparent,
       elevation: 0,
-      iconTheme: const IconThemeData(color: Colors.white),
-      actionsIconTheme: const IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: AppColors.textPrimary),
+      actionsIconTheme: const IconThemeData(color: AppColors.textPrimary),
       automaticallyImplyLeading: showBackButton,
       leading: leading ??
           (showBackButton && Navigator.canPop(context)

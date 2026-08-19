@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
-import '../core/theme/app_theme.dart';
+import '../theme/app_theme.dart';
 
 enum BackgroundShape { circle, square, triangle, hexagon }
 

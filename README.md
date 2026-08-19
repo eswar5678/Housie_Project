@@ -47,27 +47,38 @@ The app features a modern Material 3 dark-themed user interface, complete with s
 
 ```text
 lib/
-├── main.dart                      # App entry point & Firebase initialisation
+├── main.dart                      # App entry point, orientation lock & Firebase init
 ├── firebase_options.dart          # Configuration mapping to Firebase project
+├── core/                          # Shared, cross-cutting code
+│   ├── theme/                     # Design system (colors, spacing, theme)
+│   │   ├── app_colors.dart
+│   │   ├── app_dimens.dart
+│   │   └── app_theme.dart
+│   └── widgets/                   # Reusable app-wide widgets
+│       ├── app_panel.dart         # Glassmorphic surface panel
+│       ├── app_drawer.dart
+│       ├── custom_app_bar.dart
+│       ├── geometric_background.dart
+│       ├── housie_ticket_widget.dart
+│       └── star_loader.dart
 ├── models/
-│   └── room.dart                  # Models for HousieRoom, Player, Ticket, and Claim
-├── screens/
-│   ├── home_screen.dart           # Dashboard (Join/Host selection, history)
-│   ├── host_screen.dart           # Room configuration options
-│   ├── join_screen.dart           # Screen to join a game via code or scanner
-│   ├── lobby_screen.dart          # Players lobby list before host starts
-│   ├── ticket_selection_screen.dart # Ticket generator & pool selector
-│   ├── game_screen.dart           # Core game board with live ticket & scoreboard
-│   └── results_screen.dart        # Final scoreboard listing all validated claims
+│   └── room.dart                  # HousieRoom, Player, Ticket, Claim models
 ├── services/
-│   ├── game_service.dart          # Realtime Database write/read logic & validation
+│   ├── game_service.dart          # Realtime Database read/write & validation
 │   ├── persistence_service.dart   # Shared Preferences local history
 │   ├── ticket_generator.dart      # Algorithmic Housie 9x3 ticket generator
-│   └── version_check_service.dart # Remote configuration/version checking helper
-└── widgets/
-    ├── geometric_background.dart  # Canvas-based animated styling background
-    ├── housie_ticket_widget.dart  # Custom interactive 9x3 grid ticket view
-    └── star_loader.dart           # Custom star loading micro-animation
+│   └── version_check_service.dart # In-app update check (Android-only)
+└── features/                      # Feature-first modules
+    ├── home/home_screen.dart      # Dashboard (Host/Join, resume)
+    ├── host/host_screen.dart      # Room configuration
+    ├── join/join_screen.dart      # Join via code or QR scanner
+    ├── lobby/lobby_screen.dart    # Players lobby before host starts
+    ├── ticket_selection/          # Ticket pool selector
+    ├── game/                      # Core game board (two-panel landscape layout)
+    │   ├── game_screen.dart
+    │   ├── game_ui_controller.dart
+    │   └── widgets/
+    └── results/results_screen.dart # Final scoreboard & winning tickets
 ```
 
 ---

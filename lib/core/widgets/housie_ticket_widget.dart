@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/room.dart';
-import '../core/theme/app_theme.dart';
+import '../../models/room.dart';
+import '../theme/app_theme.dart';
 
 class HousieTicketWidget extends StatelessWidget {
   final HousieTicket ticket;

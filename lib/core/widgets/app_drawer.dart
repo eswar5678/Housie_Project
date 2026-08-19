@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import '../services/persistence_service.dart';
+import '../../services/persistence_service.dart';
+import '../theme/app_theme.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
@@ -33,7 +34,7 @@ class _AppDrawerState extends State<AppDrawer> {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      backgroundColor: const Color(0xFF131D33), // dark blueish black
+      backgroundColor: AppColors.surface, // dark blueish black
       child: SafeArea(
         child: Column(
           children: [
