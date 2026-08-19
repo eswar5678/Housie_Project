@@ -325,40 +325,26 @@ class _ResultsScreenState extends State<ResultsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: kToolbarHeight + 8),
-              const Text(
-                'GAME OVER',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 4,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              Text(
-                widget.room.roomName.toUpperCase(),
-                style: const TextStyle(
-                    color: AppColors.accent,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1),
-                textAlign: TextAlign.center,
-              ),
+              const SizedBox(height: kToolbarHeight + 4),
+              _buildGameOverHeader(),
               const SizedBox(height: 12),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(flex: 5, child: _buildSummaryPanel(prizes, allPrizeTypes)),
-                      const SizedBox(width: 12),
-                      Expanded(flex: 5, child: _buildWinnersPanel()),
-                    ],
-                  ),
+              _buildPrizePoolBanner(),
+              const SizedBox(height: 14),
+              _buildPrizeCards(prizes, allPrizeTypes),
+              const SizedBox(height: 14),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 6),
+                child: Text(
+                  'WINNING TICKETS',
+                  style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 2),
                 ),
               ),
+              const SizedBox(height: 8),
+              Expanded(child: _buildWinnersPanel()),
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: GlowButton(
@@ -384,110 +370,156 @@ class _ResultsScreenState extends State<ResultsScreen> {
     );
   }
 
-  Widget _buildSummaryPanel(Map<String, int> prizes, List<String> allPrizeTypes) {
-    return AppPanel(
-      scrollable: true,
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(18),
+  Widget _buildGameOverHeader() {
+    return Column(
+      children: [
+        ShaderMask(
+          shaderCallback: (bounds) =>
+              AppColors.titleGradient.createShader(bounds),
+          blendMode: BlendMode.srcIn,
+          child: const Text(
+            'GAME OVER',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 34,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 5,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          widget.room.roomName.toUpperCase(),
+          style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPrizePoolBanner() {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: AppColors.goldGradient,
+          borderRadius: BorderRadius.circular(AppDimens.radiusXl),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.accent.withValues(alpha: 0.3),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'TOTAL PRIZE POOL',
+              style: TextStyle(
+                color: Colors.black54,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 2,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '₹${widget.room.totalPool.toInt()}',
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 34,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPrizeCards(Map<String, int> prizes, List<String> allPrizeTypes) {
+    return SizedBox(
+      height: 118,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        itemCount: allPrizeTypes.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final type = allPrizeTypes[index];
+          final claim = widget.room.claims.where((c) => c.type == type).firstOrNull;
+          final isWinner = claim != null;
+          return Container(
+            width: 168,
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+              gradient: isWinner ? AppColors.successGradient : null,
+              color: isWinner ? null : AppColors.surface.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(
+                color: isWinner
+                    ? Colors.white.withValues(alpha: 0.25)
+                    : AppColors.border,
+              ),
+              boxShadow: isWinner
+                  ? [
+                      BoxShadow(
+                        color: AppColors.success.withValues(alpha: 0.3),
+                        blurRadius: 18,
+                        offset: const Offset(0, 8),
+                      ),
+                    ]
+                  : null,
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'TOTAL PRIZE POOL',
-                  style: TextStyle(
-                      color: Colors.white60,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2),
-                ),
-                const SizedBox(height: 8),
                 Text(
-                  '₹${widget.room.totalPool.toInt()}',
-                  style: const TextStyle(
-                      color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                  _getClaimLabel(type).toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isWinner ? Colors.black : AppColors.accent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  isWinner ? claim.playerName : 'Unclaimed',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isWinner ? Colors.black : AppColors.textMuted,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '₹${prizes[type]}',
+                  style: TextStyle(
+                    color: isWinner ? Colors.black87 : AppColors.textSecondary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'RESULTS TABLE',
-            style: TextStyle(
-                color: Colors.white70,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.circular(AppDimens.radiusXl),
-              border: Border.all(color: AppColors.border),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Table(
-              columnWidths: const {
-                0: FlexColumnWidth(2),
-                1: FlexColumnWidth(2.5),
-                2: FlexColumnWidth(1.5),
-              },
-              children: [
-                TableRow(
-                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05)),
-                  children: const [
-                    Padding(padding: EdgeInsets.all(14), child: Text('PRIZE', style: TextStyle(color: AppColors.accent, fontSize: 10, fontWeight: FontWeight.bold))),
-                    Padding(padding: EdgeInsets.all(14), child: Text('WINNER', style: TextStyle(color: AppColors.accent, fontSize: 10, fontWeight: FontWeight.bold))),
-                    Padding(padding: EdgeInsets.all(14), child: Text('EARNED', style: TextStyle(color: AppColors.accent, fontSize: 10, fontWeight: FontWeight.bold))),
-                  ],
-                ),
-                ...allPrizeTypes.map((type) {
-                  final claim = widget.room.claims.where((c) => c.type == type).firstOrNull;
-                  final isWinner = claim != null;
-
-                  return TableRow(
-                    decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: Colors.white10.withValues(alpha: 0.1))),
-                    ),
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-                        child: Text(_getClaimLabel(type),
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-                        child: Text(isWinner ? claim.playerName : '---',
-                            style: TextStyle(color: isWinner ? Colors.white70 : Colors.white24, fontSize: 13)),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-                        child: Text('₹${prizes[type]}',
-                            style: TextStyle(color: isWinner ? AppColors.success : Colors.white24, fontWeight: FontWeight.bold, fontSize: 13)),
-                      ),
-                    ],
-                  );
-                }),
-              ],
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
   Widget _buildWinnersPanel() {
     return AppPanel(
-      title: 'WINNING TICKETS',
-      trailing: const Icon(Icons.emoji_events, color: AppColors.accent, size: 18),
       scrollable: true,
       padding: const EdgeInsets.all(16),
       child: _buildWinningTickets(),

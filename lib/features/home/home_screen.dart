@@ -262,13 +262,77 @@ class _HomeScreenState extends State<HomeScreen> {
       endDrawer: const AppDrawer(),
       body: AppBackground(
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+          child: Column(
+            children: [
+              if (_lastSession != null) _buildRejoinBanner(),
+              Expanded(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  child: Column(
+                    children: [
+                      _buildHeader(),
+                      const SizedBox(height: 26),
+                      Expanded(child: _buildModeSplit()),
+                      const SizedBox(height: 20),
+                      const _FeatureChips(),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Top: resume banner ──────────────────────────────────────────────────
+  Widget _buildRejoinBanner() {
+    final roomId = _lastSession!['roomId'] ?? '';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _rejoinGame,
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [Color(0x33FBBF24), Color(0x14FBBF24)],
+              ),
+              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+              border: Border.all(color: AppColors.accent.withValues(alpha: 0.45)),
+            ),
             child: Row(
               children: [
-                Expanded(flex: 11, child: _buildBrand()),
-                const SizedBox(width: 48),
-                Expanded(flex: 9, child: _buildActions()),
+                const Icon(Icons.play_circle_rounded,
+                    color: AppColors.accent, size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Resume your game',
+                    style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14),
+                  ),
+                ),
+                Text(
+                  'ROOM $roomId',
+                  style: const TextStyle(
+                      color: AppColors.accent,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2),
+                ),
+                const SizedBox(width: 8),
+                const Icon(Icons.arrow_forward_rounded,
+                    color: AppColors.accent, size: 18),
               ],
             ),
           ),
@@ -277,131 +341,91 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ── Left: brand / hero ───────────────────────────────────────────────────
-  Widget _buildBrand() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const _Floaty(
-            child: _LogoMark(size: 132),
-          ),
-          const SizedBox(height: 28),
-          ShaderMask(
-            shaderCallback: (bounds) => AppColors.titleGradient.createShader(bounds),
-            blendMode: BlendMode.srcIn,
-            child: const Text(
-              'HOUSIE',
-              style: TextStyle(
-                fontSize: 64,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 3,
-                color: Colors.white,
-                height: 1,
-              ),
+  // ── Centred hero ────────────────────────────────────────────────────────
+  Widget _buildHeader() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const _Floaty(
+          child: _LogoMark(size: 96),
+        ),
+        const SizedBox(height: 20),
+        ShaderMask(
+          shaderCallback: (bounds) => AppColors.titleGradient.createShader(bounds),
+          blendMode: BlendMode.srcIn,
+          child: const Text(
+            'HOUSIE',
+            style: TextStyle(
+              fontSize: 52,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 4,
+              color: Colors.white,
+              height: 1,
             ),
           ),
-          const SizedBox(height: 10),
-          const Text(
-            'Real-time Tambola, reimagined for friends & family.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
-          ),
-          if (_lastSession != null) ...[
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppDimens.radiusPill),
-                border: Border.all(color: AppColors.success.withValues(alpha: 0.4)),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.play_circle, color: AppColors.success, size: 16),
-                  SizedBox(width: 6),
-                  Text(
-                    'You have an active game',
-                    style: TextStyle(color: AppColors.success, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          const SizedBox(height: 28),
-          const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _FeatureChip(icon: Icons.bolt_rounded, label: 'Live Sync'),
-              SizedBox(width: 10),
-              _FeatureChip(icon: Icons.qr_code_2_rounded, label: 'QR Join'),
-              SizedBox(width: 10),
-              _FeatureChip(icon: Icons.emoji_events_rounded, label: 'Instant Prizes'),
-            ],
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Host a room or join your friends — pick a side.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+        ),
+      ],
     );
   }
 
-  // ── Right: primary actions ───────────────────────────────────────────────
-  Widget _buildActions() {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 460),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+  // ── Split mode selector ─────────────────────────────────────────────────
+  Widget _buildModeSplit() {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _ActionCard(
-              key: _hostKey,
-              icon: Icons.add_circle_rounded,
-              title: 'HOST A GAME',
-              subtitle: 'Create a room & invite your friends',
-              gradient: AppColors.brandGradient,
-              glowColor: AppColors.primary,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HostScreen()),
-                ).then((_) => _checkLastSession());
-              },
-            ),
-            const SizedBox(height: 18),
-            _ActionCard(
-              key: _joinKey,
-              icon: Icons.group_rounded,
-              title: 'JOIN A GAME',
-              subtitle: 'Enter a code or scan the host\u2019s QR',
-              gradient: AppColors.secondaryGradient,
-              glowColor: AppColors.secondary,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const JoinScreen()),
-                ).then((_) => _checkLastSession());
-              },
-            ),
-            if (_lastSession != null) ...[
-              const SizedBox(height: 18),
-              _ActionCard(
-                icon: Icons.replay_rounded,
-                title: 'REJOIN GAME',
-                subtitle: 'Jump back into your last room',
-                gradient: AppColors.goldGradient,
-                glowColor: AppColors.accent,
-                onTap: _rejoinGame,
+            Expanded(
+              child: _ModeHalf(
+                cardKey: _hostKey,
+                icon: Icons.add_circle_rounded,
+                title: 'HOST',
+                subtitle: 'Create a room &\ninvite friends',
+                gradient: AppColors.brandGradient,
+                glow: AppColors.primary,
+                align: CrossAxisAlignment.end,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HostScreen()),
+                  ).then((_) => _checkLastSession());
+                },
               ),
-            ],
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _ModeHalf(
+                cardKey: _joinKey,
+                icon: Icons.group_rounded,
+                title: 'JOIN',
+                subtitle: 'Enter a code or\nscan the host QR',
+                gradient: AppColors.secondaryGradient,
+                glow: AppColors.secondary,
+                align: CrossAxisAlignment.start,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const JoinScreen()),
+                  ).then((_) => _checkLastSession());
+                },
+              ),
+            ),
           ],
         ),
-      ),
+        const _OrDivider(),
+      ],
     );
   }
 }
 
-// ── Decorative pieces ──────────────────────────────────────────────────────
+// ── Pieces ────────────────────────────────────────────────────────────────
 
 class _LogoMark extends StatelessWidget {
   final double size;
@@ -412,7 +436,7 @@ class _LogoMark extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         gradient: AppColors.surfaceGradient,
         borderRadius: BorderRadius.circular(AppDimens.radiusXl),
@@ -420,21 +444,18 @@ class _LogoMark extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.35),
-            blurRadius: 46,
-            offset: const Offset(0, 16),
+            blurRadius: 40,
+            offset: const Offset(0, 14),
           ),
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 24,
+            blurRadius: 20,
           ),
         ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-        child: Image.asset(
-          'assets/images/logo.jpg',
-          fit: BoxFit.cover,
-        ),
+        child: Image.asset('assets/images/logo.jpg', fit: BoxFit.cover),
       ),
     );
   }
@@ -466,7 +487,7 @@ class _FloatyState extends State<_Floaty>
     return AnimatedBuilder(
       animation: _c,
       builder: (context, child) => Transform.translate(
-        offset: Offset(0, -6 * _c.value),
+        offset: Offset(0, -5 * _c.value),
         child: child,
       ),
       child: widget.child,
@@ -474,122 +495,170 @@ class _FloatyState extends State<_Floaty>
   }
 }
 
-class _FeatureChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _FeatureChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(AppDimens.radiusPill),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: AppColors.accent, size: 15),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActionCard extends StatelessWidget {
+class _ModeHalf extends StatelessWidget {
+  final GlobalKey cardKey;
   final IconData icon;
   final String title;
   final String subtitle;
   final Gradient gradient;
-  final Color glowColor;
+  final Color glow;
+  final CrossAxisAlignment align;
   final VoidCallback onTap;
 
-  const _ActionCard({
-    super.key,
+  const _ModeHalf({
+    required this.cardKey,
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.gradient,
-    required this.glowColor,
+    required this.glow,
+    required this.align,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
+      key: cardKey,
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppDimens.radiusXl),
         child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             gradient: gradient,
             borderRadius: BorderRadius.circular(AppDimens.radiusXl),
             border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
             boxShadow: [
               BoxShadow(
-                color: glowColor.withValues(alpha: 0.45),
-                blurRadius: 30,
-                offset: const Offset(0, 12),
+                color: glow.withValues(alpha: 0.4),
+                blurRadius: 34,
+                offset: const Offset(0, 14),
               ),
             ],
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: align,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
                 ),
-                child: Icon(icon, color: Colors.white, size: 26),
+                child: Icon(icon, color: Colors.white, size: 30),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 2,
                 ),
               ),
-              const Icon(Icons.arrow_forward_rounded,
-                  color: Colors.white, size: 24),
+              const SizedBox(height: 6),
+              Text(
+                subtitle,
+                textAlign: align == CrossAxisAlignment.end
+                    ? TextAlign.right
+                    : TextAlign.left,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Icon(Icons.arrow_circle_right_rounded,
+                  color: Colors.white, size: 30),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _OrDivider extends StatelessWidget {
+  const _OrDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.borderStrong, width: 2),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 12),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: const Text(
+        'OR',
+        style: TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1,
+        ),
+      ),
+    );
+  }
+}
+
+class _FeatureChips extends StatelessWidget {
+  const _FeatureChips();
+
+  @override
+  Widget build(BuildContext context) {
+    const items = [
+      (Icons.bolt_rounded, 'Live Sync'),
+      (Icons.qr_code_2_rounded, 'QR Join'),
+      (Icons.emoji_events_rounded, 'Instant Prizes'),
+      (Icons.shield_rounded, 'Verified Claims'),
+    ];
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (final (icon, label) in items)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.surface.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(AppDimens.radiusPill),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, color: AppColors.accent, size: 15),
+                  const SizedBox(width: 6),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

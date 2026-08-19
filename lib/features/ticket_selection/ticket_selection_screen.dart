@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../models/room.dart';
 import '../../services/game_service.dart';
-import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/app_background.dart';
 import '../../core/widgets/glow_button.dart';
+import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/housie_ticket_widget.dart';
-import '../../core/widgets/app_panel.dart';
 import '../../core/theme/app_theme.dart';
 import '../lobby/lobby_screen.dart';
 
@@ -37,7 +36,7 @@ class _TicketSelectionScreenState extends State<TicketSelectionScreen> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.85);
+    _pageController = PageController(viewportFraction: 0.72);
     _pageController.addListener(() {
       setState(() {
         _currentPage = _pageController.page ?? 0.0;
@@ -103,13 +102,15 @@ class _TicketSelectionScreenState extends State<TicketSelectionScreen> {
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, kToolbarHeight + 8, 20, 16),
-            child: Row(
+            padding: const EdgeInsets.fromLTRB(24, kToolbarHeight + 8, 24, 16),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(flex: 6, child: _buildCarouselPanel()),
-                const SizedBox(width: 16),
-                Expanded(flex: 4, child: _buildSummaryPanel()),
+                _buildHeader(),
+                const SizedBox(height: 12),
+                Expanded(child: _buildDeck()),
+                const SizedBox(height: 12),
+                _buildTray(),
               ],
             ),
           ),
@@ -118,180 +119,176 @@ class _TicketSelectionScreenState extends State<TicketSelectionScreen> {
     );
   }
 
-  Widget _buildCarouselPanel() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _buildHeader() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Select Your Tickets',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Row(
                 children: [
-                  const Text(
-                    'Select Tickets',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(AppDimens.radiusPill),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Text(
+                      'ROOM ${widget.roomId}',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.1,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Room ID: ${widget.roomId}',
-                    style: const TextStyle(color: Colors.white54, fontSize: 13),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Tap a ticket to select • up to 6',
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 12),
                   ),
                 ],
               ),
-            ),
-            IconButton.filledTonal(
-              onPressed: _isLoading ? null : _refreshPool,
-              icon: const Icon(Icons.refresh),
-              style: IconButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(44, 44),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Expanded(
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator(color: Colors.white))
-              : PageView.builder(
-                  controller: _pageController,
-                  itemCount: _ticketPool.length,
-                  itemBuilder: (context, index) {
-                    final isSelected = _selectedIndices.contains(index);
-
-                    double difference = index - _currentPage;
-                    double scale =
-                        (1 - (difference.abs() * 0.08)).clamp(0.85, 1.0);
-                    double opacity =
-                        (1 - (difference.abs() * 0.3)).clamp(0.5, 1.0);
-
-                    return Transform.scale(
-                      scale: scale,
-                      child: Opacity(
-                        opacity: opacity,
-                        child: _buildTicketCard(index, isSelected),
-                      ),
-                    );
-                  },
-                ),
-        ),
-        if (!_isLoading)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_ticketPool.length, (index) {
-                double currentPercent =
-                    (1 - (index - _currentPage).abs()).clamp(0.0, 1.0);
-                return Container(
-                  width: 8 + (currentPercent * 8),
-                  height: 8,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    color: currentPercent > 0.5 ? AppColors.accent : Colors.white24,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                );
-              }),
-            ),
+            ],
           ),
+        ),
+        IconButton.filledTonal(
+          onPressed: _isLoading ? null : _refreshPool,
+          icon: const Icon(Icons.refresh_rounded),
+          style: IconButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(44, 44),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildSummaryPanel() {
+  Widget _buildDeck() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: Colors.white));
+    }
+
+    return PageView.builder(
+      controller: _pageController,
+      itemCount: _ticketPool.length,
+      itemBuilder: (context, index) {
+        final isSelected = _selectedIndices.contains(index);
+
+        double difference = index - _currentPage;
+        double scale = (1 - (difference.abs() * 0.07)).clamp(0.86, 1.0);
+        double opacity = (1 - (difference.abs() * 0.3)).clamp(0.55, 1.0);
+
+        return Transform.scale(
+          scale: scale,
+          child: Opacity(
+            opacity: opacity,
+            child: _buildTicketCard(index, isSelected),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTray() {
     final selected = _selectedIndices.toList()..sort();
-    return AppPanel(
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
+        border: Border.all(color: AppColors.border),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
               const Text(
-                'SELECTION SUMMARY',
+                'SELECTED',
                 style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.5),
+                  color: AppColors.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.4,
+                ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppDimens.radiusXs),
+                  child: LinearProgressIndicator(
+                    value: _selectedIndices.length / 6,
+                    backgroundColor: Colors.white10,
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(AppColors.accent),
+                    minHeight: 6,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
               Text(
-                '${_selectedIndices.length} / 6',
+                '${_selectedIndices.length}/6',
                 style: const TextStyle(
-                    color: AppColors.accent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold),
+                  color: AppColors.accent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppDimens.radiusXs),
-            child: LinearProgressIndicator(
-              value: _selectedIndices.length / 6,
-              backgroundColor: Colors.white10,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accent),
-              minHeight: 6,
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (_selectedIndices.isEmpty)
-            const Text(
-              'Tap a ticket on the left to select it. You can pick up to 6 tickets.',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.4),
-            )
-          else ...[
-            const Text(
-              'SELECTED TICKETS',
-              style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: selected
-                  .map((i) => Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(AppDimens.radiusPill),
-                          border: Border.all(
-                              color: AppColors.success.withValues(alpha: 0.4)),
-                        ),
-                        child: Text(
-                          'Ticket #${i + 1}',
-                          style: const TextStyle(
-                              color: AppColors.success,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ))
-                  .toList(),
-            ),
-          ],
-          const Spacer(),
-          GlowButton(
-            label: 'CONFIRM SELECTION',
-            icon: Icons.check_circle_rounded,
-            gradient: AppColors.successGradient,
-            glowColor: AppColors.success,
-            foregroundColor: AppColors.onAccent,
-            height: 52,
-            onPressed: _selectedIndices.isNotEmpty ? _confirmSelection : null,
+          Row(
+            children: [
+              Expanded(
+                child: selected.isEmpty
+                    ? const Text(
+                        'No tickets selected yet — tap a ticket above.',
+                        style:
+                            TextStyle(color: AppColors.textMuted, fontSize: 13),
+                      )
+                    : Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: selected
+                            .map((i) => _SelectedChip(
+                                  index: i,
+                                  onRemove: () => setState(() =>
+                                      _selectedIndices.remove(i)),
+                                ))
+                            .toList(),
+                      ),
+              ),
+              const SizedBox(width: 16),
+              SizedBox(
+                width: 240,
+                child: GlowButton(
+                  label: 'CONFIRM',
+                  icon: Icons.check_circle_rounded,
+                  gradient: AppColors.successGradient,
+                  glowColor: AppColors.success,
+                  foregroundColor: AppColors.onAccent,
+                  height: 50,
+                  onPressed:
+                      _selectedIndices.isNotEmpty ? _confirmSelection : null,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -310,14 +307,15 @@ class _TicketSelectionScreenState extends State<TicketSelectionScreen> {
               _selectedIndices.add(index);
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('You can select a maximum of 6 tickets!')),
+                const SnackBar(
+                    content: Text('You can select a maximum of 6 tickets!')),
               );
             }
           }
         });
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+        margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
           color: AppColors.surface.withValues(alpha: 0.9),
@@ -331,15 +329,15 @@ class _TicketSelectionScreenState extends State<TicketSelectionScreen> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.success.withValues(alpha: 0.25),
-                    blurRadius: 16,
+                    color: AppColors.success.withValues(alpha: 0.3),
+                    blurRadius: 20,
                     spreadRadius: 1,
                   )
                 ]
               : [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 10,
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 12,
                     offset: const Offset(0, 6),
                   )
                 ],
@@ -354,12 +352,13 @@ class _TicketSelectionScreenState extends State<TicketSelectionScreen> {
                   style: const TextStyle(
                     color: AppColors.accent,
                     fontSize: 15,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
                     letterSpacing: 1.2,
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? AppColors.success
@@ -369,7 +368,9 @@ class _TicketSelectionScreenState extends State<TicketSelectionScreen> {
                   child: Row(
                     children: [
                       Icon(
-                        isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                        isSelected
+                            ? Icons.check_circle
+                            : Icons.radio_button_unchecked,
                         color: isSelected ? Colors.black : Colors.white60,
                         size: 16,
                       ),
@@ -379,7 +380,7 @@ class _TicketSelectionScreenState extends State<TicketSelectionScreen> {
                         style: TextStyle(
                           color: isSelected ? Colors.black : Colors.white70,
                           fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],
@@ -393,7 +394,7 @@ class _TicketSelectionScreenState extends State<TicketSelectionScreen> {
                 child: SingleChildScrollView(
                   physics: const NeverScrollableScrollPhysics(),
                   child: Transform.scale(
-                    scale: 0.85,
+                    scale: 0.9,
                     child: IgnorePointer(
                       child: HousieTicketWidget(
                         ticket: _ticketPool[index],
@@ -405,6 +406,44 @@ class _TicketSelectionScreenState extends State<TicketSelectionScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SelectedChip extends StatelessWidget {
+  final int index;
+  final VoidCallback onRemove;
+
+  const _SelectedChip({required this.index, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(AppDimens.radiusPill),
+        border: Border.all(color: AppColors.success.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Ticket #${index + 1}',
+            style: const TextStyle(
+              color: AppColors.success,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: onRemove,
+            child: const Icon(Icons.close_rounded,
+                color: AppColors.success, size: 14),
+          ),
+        ],
       ),
     );
   }

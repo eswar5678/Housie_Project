@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -9,8 +10,9 @@ import '../../core/widgets/housie_ticket_widget.dart';
 import '../../core/widgets/star_loader.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/app_background.dart';
-import '../../core/widgets/glow_button.dart';
 import '../../core/widgets/app_panel.dart';
+import '../../core/widgets/glow_button.dart';
+import '../../core/widgets/animated_avatar.dart';
 import '../../core/theme/app_theme.dart';
 import '../game/game_screen.dart';
 import '../ticket_selection/ticket_selection_screen.dart';
@@ -34,12 +36,20 @@ class LobbyScreen extends StatefulWidget {
 class _LobbyScreenState extends State<LobbyScreen> {
   bool _hasNavigatedToGame = false;
   bool _isPromoting = false;
+  int _ticketPage = 0;
+  late final PageController _ticketController = PageController();
 
   @override
   void initState() {
     super.initState();
     _saveSession();
     GameService().updatePlayerStatus(widget.roomId, widget.playerName, true);
+  }
+
+  @override
+  void dispose() {
+    _ticketController.dispose();
+    super.dispose();
   }
 
   void _checkHostHandoff(HousieRoom room) {
@@ -112,6 +122,14 @@ class _LobbyScreenState extends State<LobbyScreen> {
           isHost: widget.isHost,
         ),
       ),
+    );
+  }
+
+  Future<void> _copyRoomId(String roomId) async {
+    await Clipboard.setData(ClipboardData(text: roomId));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Room ID copied to clipboard')),
     );
   }
 
@@ -310,7 +328,8 @@ class _LobbyScreenState extends State<LobbyScreen> {
                             const SizedBox(width: 12),
                             Expanded(
                                 flex: 5,
-                                child: _buildTicketsPanel(room, currentPlayer)),
+                                child:
+                                    _buildTicketsPanel(room, currentPlayer)),
                           ],
                         ),
                       ),
@@ -319,32 +338,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                       padding: const EdgeInsets.all(16),
                       child: isHostView
                           ? _buildHostStartBar(room)
-                          : Container(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-                                border: Border.all(color: AppColors.borderStrong),
-                              ),
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2, color: AppColors.accent),
-                                  ),
-                                  SizedBox(width: 16),
-                                  Text(
-                                    'Waiting for host to start...',
-                                    style: TextStyle(
-                                        color: Colors.white70,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                            ),
+                          : _buildWaitingBar(),
                     ),
                   ],
                 ),
@@ -356,27 +350,26 @@ class _LobbyScreenState extends State<LobbyScreen> {
     );
   }
 
+  // ── Left: prize hero + players grid ─────────────────────────────────────
   Widget _buildLeftPanel(HousieRoom room) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             gradient: AppColors.goldGradient,
-            borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+            borderRadius: BorderRadius.circular(AppDimens.radiusXl),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
+                color: AppColors.accent.withValues(alpha: 0.3),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
           child: Row(
             children: [
-              const Icon(Icons.emoji_events, color: Colors.black54, size: 36),
-              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,97 +377,104 @@ class _LobbyScreenState extends State<LobbyScreen> {
                     const Text(
                       'TOTAL PRIZE POOL',
                       style: TextStyle(
-                          color: Colors.black54,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2),
+                        color: Colors.black54,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2,
+                        fontSize: 11,
+                      ),
                     ),
                     Text(
                       '₹${room.totalPool.toStringAsFixed(0)}',
                       style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 34,
-                          fontWeight: FontWeight.bold),
+                        color: Colors.black,
+                        fontSize: 38,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      room.roomName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
               ),
-              Text(
-                'Room ID: ${room.roomId}',
-                style: const TextStyle(color: Colors.black45, fontSize: 12),
+              const SizedBox(width: 12),
+              Column(
+                children: [
+                  _HeroAction(
+                    icon: Icons.copy_rounded,
+                    label: 'Copy',
+                    onTap: () => _copyRoomId(room.roomId),
+                  ),
+                  const SizedBox(height: 8),
+                  _HeroAction(
+                    icon: Icons.qr_code_2_rounded,
+                    label: 'QR',
+                    onTap: () =>
+                        _showQRDialog(context, room.roomId, room.roomName),
+                  ),
+                  const SizedBox(height: 8),
+                  _HeroAction(
+                    icon: Icons.share_rounded,
+                    label: 'Share',
+                    onTap: () => Share.share(
+                      'Join my Housie Game!\nRoom Name: ${room.roomName}\nRoom ID: ${room.roomId}',
+                      subject: 'Housie Game Join Request',
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(vertical: 2),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
                 'PLAYERS JOINED',
                 style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1),
+                  color: AppColors.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.4,
+                ),
               ),
               Text(
                 '${room.players.length} / ${room.maxPlayers}',
                 style: const TextStyle(
-                    color: AppColors.accent, fontWeight: FontWeight.bold),
+                  color: AppColors.accent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),
         ),
+        const SizedBox(height: 8),
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 4),
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              mainAxisExtent: 74,
+            ),
             itemCount: room.players.length,
             itemBuilder: (context, index) {
               final player = room.players.values.toList()[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-                ),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: player.isHost
-                        ? AppColors.accent
-                        : AppColors.secondary,
-                    child: Text(
-                      player.name[0].toUpperCase(),
-                      style: const TextStyle(
-                          color: Colors.black, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  title: Text(
-                    player.name == widget.playerName
-                        ? '${player.name} (You)'
-                        : player.name,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  subtitle: Text(
-                    '${player.ticketCount} Ticket${player.ticketCount > 1 ? 's' : ''}',
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4), fontSize: 12),
-                  ),
-                  trailing: player.isHost
-                      ? Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.accent.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(AppDimens.radiusXs),
-                          ),
-                          child: const Text(
-                            'HOST',
-                            style: TextStyle(color: AppColors.accent, fontSize: 10),
-                          ),
-                        )
-                      : null,
-                ),
+              return _PlayerCard(
+                player: player,
+                isYou: player.name.trim().toUpperCase() ==
+                    widget.playerName.trim().toUpperCase(),
               );
             },
           ),
@@ -483,7 +483,11 @@ class _LobbyScreenState extends State<LobbyScreen> {
     );
   }
 
+  // ── Right: tickets carousel ─────────────────────────────────────────────
   Widget _buildTicketsPanel(HousieRoom room, Player currentPlayer) {
+    final tickets = currentPlayer.tickets;
+    final page = _ticketPage.clamp(0, tickets.isEmpty ? 0 : tickets.length - 1);
+
     return AppPanel(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -494,42 +498,51 @@ class _LobbyScreenState extends State<LobbyScreen> {
               const Text(
                 'YOUR TICKETS',
                 style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.5),
+                  color: AppColors.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.5,
+                ),
               ),
               const Spacer(),
-              Text(
-                '${currentPlayer.ticketCount} selected',
-                style: const TextStyle(color: AppColors.success, fontSize: 11),
-              ),
+              if (tickets.isNotEmpty)
+                Text(
+                  '${currentPlayer.ticketCount} selected',
+                  style: const TextStyle(
+                      color: AppColors.success, fontSize: 11),
+                ),
             ],
           ),
           const SizedBox(height: 12),
           Expanded(
-            child: currentPlayer.tickets.isEmpty
+            child: tickets.isEmpty
                 ? Center(child: _buildEmptyTickets())
-                : ListView.builder(
-                    itemCount: currentPlayer.tickets.length,
+                : PageView.builder(
+                    controller: _ticketController,
+                    itemCount: tickets.length,
+                    onPageChanged: (i) => setState(() => _ticketPage = i),
                     itemBuilder: (context, index) {
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
                         child: Column(
                           children: [
                             Text(
                               'TICKET ${index + 1}',
                               style: const TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold),
+                                color: AppColors.textMuted,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                            const SizedBox(height: 6),
-                            ConstrainedBox(
-                              constraints: const BoxConstraints(
-                                  maxWidth: AppDimens.maxTicketWidth),
-                              child: HousieTicketWidget(
-                                  ticket: currentPlayer.tickets[index]),
+                            const SizedBox(height: 8),
+                            Expanded(
+                              child: Center(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                      maxWidth: AppDimens.maxTicketWidth),
+                                  child: HousieTicketWidget(ticket: tickets[index]),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -537,11 +550,29 @@ class _LobbyScreenState extends State<LobbyScreen> {
                     },
                   ),
           ),
-          if (currentPlayer.tickets.isNotEmpty)
+          if (tickets.length > 1) ...[
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(tickets.length, (i) {
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: i == page ? 18 : 8,
+                  height: 8,
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  decoration: BoxDecoration(
+                    color: i == page ? AppColors.accent : Colors.white24,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                );
+              }),
+            ),
+          ],
+          if (tickets.isNotEmpty)
             TextButton.icon(
               onPressed: _navigateToTicketSelection,
-              icon: const Icon(Icons.edit, size: 16),
-              label: const Text('RE-SELECT TICKET'),
+              icon: const Icon(Icons.edit_rounded, size: 16),
+              label: const Text('CHANGE TICKETS'),
               style: TextButton.styleFrom(foregroundColor: Colors.white54),
             ),
         ],
@@ -553,27 +584,22 @@ class _LobbyScreenState extends State<LobbyScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.confirmation_num_outlined, size: 64, color: Colors.white24),
+        const Icon(Icons.confirmation_num_outlined,
+            size: 64, color: Colors.white24),
         const SizedBox(height: 12),
         const Text(
           "You haven't selected any tickets yet.",
           style: TextStyle(color: Colors.white70),
         ),
         const SizedBox(height: 16),
-        ElevatedButton(
+        GlowButton(
+          label: 'SELECT TICKETS',
+          icon: Icons.confirmation_num_rounded,
+          gradient: AppColors.goldGradient,
+          glowColor: AppColors.accent,
+          foregroundColor: AppColors.onAccent,
+          height: 48,
           onPressed: _navigateToTicketSelection,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.accent,
-            foregroundColor: AppColors.onAccent,
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-            ),
-          ),
-          child: const Text(
-            'SELECT TICKETS',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
         ),
       ],
     );
@@ -591,9 +617,10 @@ class _LobbyScreenState extends State<LobbyScreen> {
             child: Text(
               'Waiting for players to pick tickets...',
               style: const TextStyle(
-                  color: AppColors.accent,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold),
+                color: AppColors.accent,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         GlowButton(
@@ -610,6 +637,142 @@ class _LobbyScreenState extends State<LobbyScreen> {
               : null,
         ),
       ],
+    );
+  }
+
+  Widget _buildWaitingBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+        border: Border.all(color: AppColors.borderStrong),
+      ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+                strokeWidth: 2, color: AppColors.accent),
+          ),
+          SizedBox(width: 14),
+          Text(
+            'Waiting for host to start...',
+            style: TextStyle(
+                color: Colors.white70, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _HeroAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+      child: Container(
+        width: 64,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.15)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.black87, size: 20),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PlayerCard extends StatelessWidget {
+  final Player player;
+  final bool isYou;
+
+  const _PlayerCard({required this.player, required this.isYou});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          AnimatedAvatar(
+            name: player.name,
+            isOnline: player.isOnline,
+            isHost: player.isHost,
+            size: 40,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        isYou ? '${player.name} (You)' : player.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: player.isOnline
+                              ? AppColors.textPrimary
+                              : AppColors.textMuted,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${player.ticketCount} Ticket${player.ticketCount > 1 ? 's' : ''}',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.45),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

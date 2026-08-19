@@ -5,9 +5,9 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../models/room.dart';
 import '../../services/game_service.dart';
 import '../../services/persistence_service.dart';
-import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/app_background.dart';
 import '../../core/widgets/glow_button.dart';
+import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/app_panel.dart';
 import '../../core/theme/app_theme.dart';
 import '../lobby/lobby_screen.dart';
@@ -28,6 +28,13 @@ class _JoinScreenState extends State<JoinScreen> {
   void initState() {
     super.initState();
     _loadDefaultName();
+  }
+
+  @override
+  void dispose() {
+    _roomIdController.dispose();
+    _playerNameController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadDefaultName() async {
@@ -134,13 +141,13 @@ class _JoinScreenState extends State<JoinScreen> {
                 AppDimens.xl, kToolbarHeight + 12, AppDimens.xl, AppDimens.lg),
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1080),
+                constraints: const BoxConstraints(maxWidth: 1120),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(flex: 5, child: _buildFormPanel()),
+                    Expanded(flex: 5, child: _buildForm()),
                     const SizedBox(width: AppDimens.xl),
-                    Expanded(flex: 4, child: _buildInfoPanel()),
+                    Expanded(flex: 4, child: _buildScanHero()),
                   ],
                 ),
               ),
@@ -151,7 +158,7 @@ class _JoinScreenState extends State<JoinScreen> {
     );
   }
 
-  Widget _buildFormPanel() {
+  Widget _buildForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -160,12 +167,12 @@ class _JoinScreenState extends State<JoinScreen> {
           style: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 30,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: AppDimens.sm),
+        const SizedBox(height: 6),
         const Text(
-          'Enter details to join and play with friends in seconds.',
+          'Enter the room details, or scan the host\u2019s QR to jump right in.',
           style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
         ),
         const SizedBox(height: AppDimens.lg),
@@ -181,7 +188,8 @@ class _JoinScreenState extends State<JoinScreen> {
                   label: 'ROOM ID',
                   hint: 'e.g., HS1234',
                   suffixIcon: IconButton(
-                    icon: const Icon(Icons.qr_code_scanner, color: AppColors.secondary),
+                    icon: const Icon(Icons.qr_code_scanner,
+                        color: AppColors.secondary),
                     onPressed: _scanQR,
                   ),
                   validator: (value) {
@@ -210,7 +218,7 @@ class _JoinScreenState extends State<JoinScreen> {
                   gradient: AppColors.secondaryGradient,
                   glowColor: AppColors.secondary,
                   foregroundColor: AppColors.onAccent,
-                  height: 52,
+                  height: 54,
                   onPressed: _joinRoom,
                 ),
               ],
@@ -221,54 +229,86 @@ class _JoinScreenState extends State<JoinScreen> {
     );
   }
 
-  Widget _buildInfoPanel() {
+  Widget _buildScanHero() {
     return AppPanel(
-      title: 'JOIN IN SECONDS',
-      trailing: const Icon(Icons.qr_code_scanner, color: AppColors.secondary, size: 20),
+      glowColor: AppColors.secondary,
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _InfoStep(
-            index: '1',
-            title: 'Get the Room ID',
-            body: 'Ask the host for the code, or just scan their QR.',
-            icon: Icons.tag,
-            color: AppColors.primary,
-          ),
-          const SizedBox(height: AppDimens.md),
-          _InfoStep(
-            index: '2',
-            title: 'Pick your ticket',
-            body: 'Choose a ticket from the pool before the game starts.',
-            icon: Icons.confirmation_num,
-            color: AppColors.secondary,
-          ),
-          const SizedBox(height: AppDimens.md),
-          _InfoStep(
-            index: '3',
-            title: 'Tap numbers as they call',
-            body: 'Mark called numbers and claim prizes when you win.',
-            icon: Icons.touch_app,
-            color: AppColors.accent,
-          ),
-          const SizedBox(height: AppDimens.lg),
-          SizedBox(
-            height: 48,
-            child: OutlinedButton.icon(
-              onPressed: _scanQR,
-              icon: const Icon(Icons.qr_code_scanner, size: 20),
-              label: const Text(
-                'SCAN QR CODE',
-                style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+          Center(
+            child: Container(
+              width: 110,
+              height: 110,
+              decoration: BoxDecoration(
+                gradient: AppColors.secondaryGradient,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.secondary.withValues(alpha: 0.4),
+                    blurRadius: 36,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
               ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.secondary,
-                side: const BorderSide(color: AppColors.secondary),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+              child: const Icon(Icons.qr_code_scanner_rounded,
+                  color: Colors.white, size: 54),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Scan to join instantly',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Point your camera at the host\u2019s QR code and the Room ID fills itself in.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 13,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 22),
+          GlowButton(
+            label: 'Open Scanner',
+            icon: Icons.qr_code_scanner_rounded,
+            gradient: AppColors.secondaryGradient,
+            glowColor: AppColors.secondary,
+            foregroundColor: AppColors.onAccent,
+            height: 52,
+            onPressed: _scanQR,
+          ),
+          const SizedBox(height: 18),
+          const Row(
+            children: [
+              Expanded(child: Divider(color: AppColors.border)),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  'OR TYPE IT IN',
+                  style: TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.4,
+                  ),
                 ),
               ),
-            ),
+              Expanded(child: Divider(color: AppColors.border)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Ask the host for the Room ID and enter it on the left.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textMuted, fontSize: 12),
           ),
         ],
       ),
@@ -290,8 +330,8 @@ class _JoinScreenState extends State<JoinScreen> {
           style: const TextStyle(
             color: AppColors.secondary,
             fontSize: 11,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.4,
           ),
         ),
         const SizedBox(height: AppDimens.sm),
@@ -301,11 +341,11 @@ class _JoinScreenState extends State<JoinScreen> {
           style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: AppColors.textPrimary.withValues(alpha: 0.3)),
             suffixIcon: suffixIcon,
             filled: true,
             fillColor: Colors.white.withValues(alpha: 0.06),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppDimens.radiusLg),
               borderSide: BorderSide.none,
@@ -316,7 +356,8 @@ class _JoinScreenState extends State<JoinScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-              borderSide: const BorderSide(color: AppColors.secondary, width: 1.5),
+              borderSide:
+                  const BorderSide(color: AppColors.secondary, width: 1.5),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppDimens.radiusLg),
@@ -327,65 +368,6 @@ class _JoinScreenState extends State<JoinScreen> {
               borderSide: const BorderSide(color: AppColors.danger, width: 1.5),
             ),
             errorStyle: const TextStyle(color: AppColors.danger),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _InfoStep extends StatelessWidget {
-  final String index;
-  final String title;
-  final String body;
-  final IconData icon;
-  final Color color;
-
-  const _InfoStep({
-    required this.index,
-    required this.title,
-    required this.body,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '$index. $title',
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                body,
-                style: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 12,
-                  height: 1.35,
-                ),
-              ),
-            ],
           ),
         ),
       ],

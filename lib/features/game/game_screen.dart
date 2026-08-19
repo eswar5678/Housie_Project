@@ -11,12 +11,12 @@ import '../../services/persistence_service.dart';
 import '../../core/widgets/housie_ticket_widget.dart';
 import '../../core/widgets/app_background.dart';
 import '../../core/widgets/glow_button.dart';
+import '../../core/widgets/animated_avatar.dart';
 import '../../core/theme/app_theme.dart';
 import '../results/results_screen.dart';
 import 'game_ui_controller.dart';
 import 'widgets/number_board.dart';
 import 'widgets/current_number_ring.dart';
-import 'widgets/animated_avatar.dart';
 
 /// Landscape, two-panel game screen.
 ///
@@ -56,6 +56,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   // Real-time claim notification state
   final Set<String> _shownClaimKeys = {};
   Timer? _notificationDismissTimer;
+
+  // Ticket switcher
+  final PageController _ticketController = PageController();
+  int _ticketPage = 0;
 
   bool get _soundOn => ref.read(gameUiControllerProvider).soundOn;
 
@@ -120,6 +124,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     _roomSubscription?.cancel();
     _stopCountdownCycle();
     _notificationDismissTimer?.cancel();
+    _ticketController.dispose();
     super.dispose();
   }
 
@@ -700,6 +705,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
   Widget _buildTicketsPanel(HousieRoom room, Player currentPlayer) {
     final ui = ref.watch(gameUiControllerProvider);
+    final tickets = currentPlayer.tickets;
+    final page = _ticketPage.clamp(0, tickets.isEmpty ? 0 : tickets.length - 1);
 
     return Container(
       decoration: BoxDecoration(
@@ -708,7 +715,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -719,7 +726,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 11,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                       letterSpacing: 1.5),
                 ),
                 const Spacer(),
@@ -735,73 +742,107 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     style: const TextStyle(
                         color: AppColors.accent,
                         fontSize: 10,
-                        fontWeight: FontWeight.bold),
+                        fontWeight: FontWeight.w700),
                   ),
                 ),
               ],
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: currentPlayer.tickets.length,
-              itemBuilder: (context, index) {
-                final ticket = currentPlayer.tickets[index];
-                final ticketMarked = ui.ticketMarkings[index] ?? const <int>{};
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: ConstrainedBox(
-                      constraints:
-                          const BoxConstraints(maxWidth: AppDimens.maxTicketWidth),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                'TICKET ${index + 1}',
-                                style: const TextStyle(
-                                    color: AppColors.textMuted,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              const Spacer(),
-                              SizedBox(
-                                width: 108,
-                                height: 34,
-                                child: GlowButton(
-                                  label: 'Claim',
-                                  gradient: AppColors.dangerGradient,
-                                  glowColor: AppColors.danger,
-                                  foregroundColor: Colors.white,
-                                  height: 34,
-                                  fontSize: 12,
-                                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                                  onPressed: () => _showClaimDialog(index, room),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          HousieTicketWidget(
-                            ticket: ticket,
-                            markedIndices: ticketMarked,
-                            onNumberTap: (cellIdx) => ref
-                                .read(gameUiControllerProvider.notifier)
-                                .toggleMark(
-                                  ticketIndex: index,
-                                  cellIndex: cellIdx,
-                                  number: ticket.numbers[cellIdx],
-                                  calledNumbers: room.calledNumbers,
-                                ),
-                          ),
-                        ],
-                      ),
+            child: tickets.isEmpty
+                ? const Center(
+                    child: Text(
+                      'No tickets found.',
+                      style: TextStyle(color: Colors.white54),
                     ),
+                  )
+                : PageView.builder(
+                    controller: _ticketController,
+                    itemCount: tickets.length,
+                    onPageChanged: (i) => setState(() => _ticketPage = i),
+                    itemBuilder: (context, index) {
+                      final ticket = tickets[index];
+                      final ticketMarked =
+                          ui.ticketMarkings[index] ?? const <int>{};
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  'TICKET ${index + 1}',
+                                  style: const TextStyle(
+                                      color: AppColors.textMuted,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  '${ticketMarked.length}/15 marked',
+                                  style: const TextStyle(
+                                      color: AppColors.textMuted,
+                                      fontSize: 11),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Expanded(
+                              child: Center(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                      maxWidth: AppDimens.maxTicketWidth),
+                                  child: HousieTicketWidget(
+                                    ticket: ticket,
+                                    markedIndices: ticketMarked,
+                                    onNumberTap: (cellIdx) => ref
+                                        .read(gameUiControllerProvider.notifier)
+                                        .toggleMark(
+                                          ticketIndex: index,
+                                          cellIndex: cellIdx,
+                                          number: ticket.numbers[cellIdx],
+                                          calledNumbers: room.calledNumbers,
+                                        ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
+          ),
+          if (tickets.length > 1)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(tickets.length, (i) {
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: i == page ? 18 : 8,
+                    height: 8,
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    decoration: BoxDecoration(
+                      color: i == page ? AppColors.accent : Colors.white24,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: GlowButton(
+              label: 'Claim Prize',
+              icon: Icons.emoji_events_rounded,
+              gradient: AppColors.dangerGradient,
+              glowColor: AppColors.danger,
+              foregroundColor: Colors.white,
+              height: 48,
+              onPressed: () => _showClaimDialog(page, room),
             ),
           ),
         ],

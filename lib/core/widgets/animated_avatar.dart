@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 /// Animated player avatar with online glow, host star and presence dot.
 ///
@@ -104,7 +105,7 @@ class _AnimatedAvatarState extends State<AnimatedAvatar>
             height: widget.size,
             decoration: BoxDecoration(
               color: widget.isOnline
-                  ? const Color(0xFF102A43)
+                  ? AppColors.surfaceHigh
                   : Colors.grey.shade900,
               shape: BoxShape.circle,
               border: Border.all(
@@ -140,7 +141,7 @@ class _AnimatedAvatarState extends State<AnimatedAvatar>
               decoration: BoxDecoration(
                 color: widget.isOnline ? Colors.greenAccent : Colors.redAccent,
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF0D1B3E), width: 1.5),
+                border: Border.all(color: AppColors.background, width: 1.5),
               ),
             ),
           ),

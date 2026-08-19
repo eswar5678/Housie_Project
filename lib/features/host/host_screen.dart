@@ -29,6 +29,23 @@ class _HostScreenState extends State<HostScreen> {
   void initState() {
     super.initState();
     _loadDefaultName();
+    // Rebuild the live preview as the user types.
+    _roomNameController.addListener(_onChanged);
+    _playersController.addListener(_onChanged);
+    _priceController.addListener(_onChanged);
+  }
+
+  void _onChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _roomNameController.dispose();
+    _playersController.dispose();
+    _hostNameController.dispose();
+    _priceController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadDefaultName() async {
@@ -42,7 +59,6 @@ class _HostScreenState extends State<HostScreen> {
 
   Future<void> _createRoom() async {
     if (_formKey.currentState!.validate()) {
-      // 1. Silent login if not yet done
       final auth = FirebaseAuth.instance;
       if (auth.currentUser == null) {
         await auth.signInAnonymously();
@@ -85,6 +101,13 @@ class _HostScreenState extends State<HostScreen> {
     }
   }
 
+  double? get _prizePool {
+    final players = int.tryParse(_playersController.text.trim());
+    final price = double.tryParse(_priceController.text.trim());
+    if (players == null || price == null || players <= 0) return null;
+    return players * price;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,13 +122,13 @@ class _HostScreenState extends State<HostScreen> {
                 AppDimens.xl, kToolbarHeight + 12, AppDimens.xl, AppDimens.lg),
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1080),
+                constraints: const BoxConstraints(maxWidth: 1120),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(flex: 5, child: _buildFormPanel()),
+                    Expanded(flex: 5, child: _buildForm()),
                     const SizedBox(width: AppDimens.xl),
-                    Expanded(flex: 4, child: _buildInfoPanel()),
+                    Expanded(flex: 4, child: _buildLivePreview()),
                   ],
                 ),
               ),
@@ -116,7 +139,7 @@ class _HostScreenState extends State<HostScreen> {
     );
   }
 
-  Widget _buildFormPanel() {
+  Widget _buildForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -125,12 +148,12 @@ class _HostScreenState extends State<HostScreen> {
           style: TextStyle(
             color: AppColors.textPrimary,
             fontSize: 30,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: AppDimens.sm),
+        const SizedBox(height: 6),
         const Text(
-          'Create a private room and invite your friends in seconds.',
+          'Set up your room in seconds — the preview updates live.',
           style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
         ),
         const SizedBox(height: AppDimens.lg),
@@ -162,7 +185,7 @@ class _HostScreenState extends State<HostScreen> {
                     Expanded(
                       child: _buildField(
                         controller: _priceController,
-                        label: 'PRICE',
+                        label: 'TICKET PRICE',
                         hint: '₹50',
                         keyboardType: TextInputType.number,
                       ),
@@ -182,7 +205,7 @@ class _HostScreenState extends State<HostScreen> {
                   gradient: AppColors.goldGradient,
                   glowColor: AppColors.accent,
                   foregroundColor: AppColors.onAccent,
-                  height: 52,
+                  height: 54,
                   onPressed: _createRoom,
                 ),
               ],
@@ -193,51 +216,96 @@ class _HostScreenState extends State<HostScreen> {
     );
   }
 
-  Widget _buildInfoPanel() {
-    return AppPanel(
-      title: 'HOW HOSTING WORKS',
-      trailing: const Icon(Icons.tips_and_updates, color: AppColors.accent, size: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _InfoStep(
-            index: '1',
-            title: 'Configure your room',
-            body: 'Set a room name, number of players and the ticket price.',
-            icon: Icons.tune,
-            color: AppColors.primary,
+  Widget _buildLivePreview() {
+    final roomName = _roomNameController.text.trim();
+    final hostName = _hostNameController.text.trim();
+    final pool = _prizePool;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppPanel(
+          glowColor: AppColors.accent,
+          title: 'LIVE ROOM PREVIEW',
+          trailing: const Icon(Icons.visibility_rounded,
+              color: AppColors.accent, size: 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: AppColors.goldGradient,
+                  borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.accent.withValues(alpha: 0.3),
+                      blurRadius: 24,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'TOTAL PRIZE POOL',
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2,
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      pool != null ? '₹${pool.toInt()}' : '₹ —',
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 40,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      roomName.isEmpty ? 'Your room name' : roomName,
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              _PreviewRow(
+                label: 'HOST',
+                value: hostName.isEmpty ? 'You' : hostName,
+                icon: Icons.person_rounded,
+              ),
+              const SizedBox(height: 10),
+              _PreviewRow(
+                label: 'JOIN VIA',
+                value: 'Room ID + QR code',
+                icon: Icons.qr_code_2_rounded,
+              ),
+              const SizedBox(height: 10),
+              _PreviewRow(
+                label: 'STATUS',
+                value: 'Not started',
+                icon: Icons.schedule_rounded,
+              ),
+            ],
           ),
-          const SizedBox(height: AppDimens.md),
-          _InfoStep(
-            index: '2',
-            title: 'Share your Room ID or QR',
-            body: 'Players join instantly by typing the code or scanning your QR.',
-            icon: Icons.qr_code_2,
-            color: AppColors.secondary,
-          ),
-          const SizedBox(height: AppDimens.md),
-          _InfoStep(
-            index: '3',
-            title: 'Start the game',
-            body: 'Once everyone picks a ticket, hit Start — numbers call automatically.',
-            icon: Icons.play_circle,
-            color: AppColors.accent,
-          ),
-          const SizedBox(height: AppDimens.lg),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-              border: Border.all(color: AppColors.accent.withValues(alpha: 0.25)),
-            ),
-            child: const Text(
-              'Players can join using your Room ID. Keep it ready to share!',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-            ),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Players join by typing your Room ID or scanning the QR shown in the lobby.',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 13, height: 1.4),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 
@@ -255,8 +323,8 @@ class _HostScreenState extends State<HostScreen> {
           style: const TextStyle(
             color: AppColors.accent,
             fontSize: 11,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.4,
           ),
         ),
         const SizedBox(height: AppDimens.sm),
@@ -266,10 +334,10 @@ class _HostScreenState extends State<HostScreen> {
           style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: AppColors.textPrimary.withValues(alpha: 0.3)),
             filled: true,
             fillColor: Colors.white.withValues(alpha: 0.06),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppDimens.radiusLg),
               borderSide: BorderSide.none,
@@ -304,58 +372,51 @@ class _HostScreenState extends State<HostScreen> {
   }
 }
 
-class _InfoStep extends StatelessWidget {
-  final String index;
-  final String title;
-  final String body;
+class _PreviewRow extends StatelessWidget {
+  final String label;
+  final String value;
   final IconData icon;
-  final Color color;
 
-  const _InfoStep({
-    required this.index,
-    required this.title,
-    required this.body,
+  const _PreviewRow({
+    required this.label,
+    required this.value,
     required this.icon,
-    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 40,
-          height: 40,
+          width: 34,
+          height: 34,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+            color: AppColors.accent.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(AppDimens.radiusSm),
           ),
-          child: Icon(icon, color: color, size: 20),
+          child: Icon(icon, color: AppColors.accent, size: 17),
         ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '$index. $title',
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                body,
-                style: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 12,
-                  height: 1.35,
-                ),
-              ),
-            ],
+        const SizedBox(width: 12),
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.textMuted,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const Spacer(),
+        Flexible(
+          child: Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],
