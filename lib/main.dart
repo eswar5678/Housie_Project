@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'screens/home_screen.dart';
+import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  // ── Enterprise: lock the whole app to landscape ─────────────────────────
+  // (Android's manifest also declares sensorLandscape as a native fallback.)
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
+
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
     debugPrint('Flutter Error: ${details.toString()}');
@@ -30,14 +40,14 @@ void main() async {
       debugPrint('Firebase already initialized (dart).');
     }
     debugPrint('Firebase initialized successfully.');
-    
+
     // Silent anonymous auth at startup to avoid permission issues
     if (FirebaseAuth.instance.currentUser == null) {
       debugPrint('Firebase: Silent login at startup...');
       await FirebaseAuth.instance.signInAnonymously();
     }
-    
-    runApp(const MyApp());
+
+    runApp(const ProviderScope(child: MyApp()));
   } catch (e, stackTrace) {
     debugPrint('Error during startup: $e');
     debugPrint('Stack trace: $stackTrace');
@@ -59,14 +69,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Housie Multiplayer',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.deepPurple,
-        useMaterial3: true,
-        fontFamily: 'Roboto', // Default for now
-      ),
+      theme: AppTheme.dark(),
       home: const HomeScreen(),
     );
   }
 }
-

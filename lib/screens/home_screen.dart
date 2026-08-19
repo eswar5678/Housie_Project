@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'host_screen.dart';
 import 'join_screen.dart';
 import 'lobby_screen.dart';
-import 'game_screen.dart';
+import '../features/game/game_screen.dart';
 import '../widgets/geometric_background.dart';
 import '../services/persistence_service.dart';
 import '../services/game_service.dart';

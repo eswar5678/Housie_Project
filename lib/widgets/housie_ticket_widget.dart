@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/room.dart';
+import '../core/theme/app_theme.dart';
 
 class HousieTicketWidget extends StatelessWidget {
   final HousieTicket ticket;
@@ -18,9 +19,9 @@ class HousieTicketWidget extends StatelessWidget {
     return Container(
       width: double.infinity, // Fill parent width (compatible with GridView cells)
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF94A3B8), width: 1.5), // Slate border
+        color: AppColors.ticketBg,
+        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+        border: Border.all(color: AppColors.ticketBorder, width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -50,11 +51,11 @@ class HousieTicketWidget extends StatelessWidget {
               onTap: number != 0 ? () => onNumberTap?.call(index) : null,
               child: Container(
                 decoration: BoxDecoration(
-                  color: number == 0 
-                      ? const Color(0xFFF1F5F9) // Shaded empty slate blocks
-                      : Colors.white, // High-contrast number blocks
+                  color: number == 0
+                      ? AppColors.ticketEmpty // Shaded empty slate blocks
+                      : AppColors.ticketBg, // High-contrast number blocks
                   border: Border.all(
-                    color: const Color(0xFFCBD5E1), // Defined visible grid lines
+                    color: AppColors.ticketGridLine, // Defined visible grid lines
                     width: 0.75,
                   ),
                 ),
@@ -65,7 +66,7 @@ class HousieTicketWidget extends StatelessWidget {
                       Text(
                         number.toString(),
                         style: TextStyle(
-                          color: const Color(0xFF0F172A), // Dark charcoal/slate
+                          color: AppColors.ticketNumber, // Dark charcoal/slate
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                           decoration: isMarked ? TextDecoration.lineThrough : null,

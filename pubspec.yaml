@@ -46,6 +46,7 @@ dependencies:
   in_app_update: ^4.2.5
   tutorial_coach_mark: ^1.3.3
   flutter_tts: ^4.2.2
+  flutter_riverpod: ^2.6.1
 
 dev_dependencies:
   flutter_test:

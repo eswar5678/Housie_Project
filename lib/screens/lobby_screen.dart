@@ -8,7 +8,7 @@ import '../widgets/housie_ticket_widget.dart';
 import '../widgets/star_loader.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/geometric_background.dart';
-import 'game_screen.dart';
+import '../features/game/game_screen.dart';
 import 'ticket_selection_screen.dart';
 
 class LobbyScreen extends StatefulWidget {
