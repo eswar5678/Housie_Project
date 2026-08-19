@@ -1,1 +1,39 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"housie-game-be0b8","appId":"1:372195678596:android:46eeba720df318d9eee5d1","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"housie-game-be0b8","configurations":{"android":"1:372195678596:android:46eeba720df318d9eee5d1","ios":"1:372195678596:ios:516a102cb0bea68beee5d1","macos":"1:372195678596:ios:516a102cb0bea68beee5d1","web":"1:372195678596:web:0638e62248015894eee5d1","windows":"1:372195678596:web:b7c22325d59ead2deee5d1"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "housie-game-be0b8",
+          "appId": "1:372195678596:android:46eeba720df318d9eee5d1",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "housie-game-be0b8",
+          "configurations": {
+            "android": "1:372195678596:android:46eeba720df318d9eee5d1",
+            "ios": "1:372195678596:ios:516a102cb0bea68beee5d1",
+            "macos": "1:372195678596:ios:516a102cb0bea68beee5d1",
+            "web": "1:372195678596:web:0638e62248015894eee5d1",
+            "windows": "1:372195678596:web:b7c22325d59ead2deee5d1"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
