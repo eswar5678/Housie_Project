@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PersistenceService {
   static final PersistenceService _instance = PersistenceService._internal();
   factory PersistenceService() => _instance;
-  PersistenceService._internal();
+  PersistenceService._internal() {
+    _initFallingBallsState();
+  }
 
   static const String _keyRoomId = 'last_room_id';
   static const String _keyPlayerName = 'last_player_name';
@@ -68,6 +71,28 @@ class PersistenceService {
 
   static const String _keySoundEnabled = 'sound_enabled';
   static const String _keyMusicEnabled = 'music_enabled';
+  static const String _keyFallingBallsEnabled = 'falling_balls_enabled';
+
+  // Global reactive notifier for instant background toggling
+  static final ValueNotifier<bool> fallingBallsNotifier = ValueNotifier<bool>(true);
+
+  Future<void> _initFallingBallsState() async {
+    final prefs = await SharedPreferences.getInstance();
+    fallingBallsNotifier.value = prefs.getBool(_keyFallingBallsEnabled) ?? true;
+  }
+
+  Future<bool> isFallingBallsEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    final enabled = prefs.getBool(_keyFallingBallsEnabled) ?? true;
+    fallingBallsNotifier.value = enabled;
+    return enabled;
+  }
+
+  Future<void> setFallingBallsEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyFallingBallsEnabled, enabled);
+    fallingBallsNotifier.value = enabled;
+  }
 
   Future<bool> isSoundEnabled() async {
     final prefs = await SharedPreferences.getInstance();
@@ -92,5 +117,48 @@ class PersistenceService {
   Future<void> resetTutorial() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyHasSeenTutorial, false);
+  }
+
+  // ================= RATING LOGIC =================
+  static const String _keyHasRatedApp = 'has_rated_app';
+  static const String _keyGameFinishedCount = 'games_finished_count';
+  static const String _keyLastRatingPromptTime = 'last_rating_prompt_time';
+
+  Future<bool> hasRatedApp() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyHasRatedApp) ?? false;
+  }
+
+  Future<void> markAppAsRated() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyHasRatedApp, true);
+  }
+
+  Future<bool> shouldShowRatingPrompt() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bool alreadyRated = prefs.getBool(_keyHasRatedApp) ?? false;
+    if (alreadyRated) return false;
+
+    final int gamesCount = (prefs.getInt(_keyGameFinishedCount) ?? 0) + 1;
+    await prefs.setInt(_keyGameFinishedCount, gamesCount);
+
+    final int? lastPromptTime = prefs.getInt(_keyLastRatingPromptTime);
+    final int now = DateTime.now().millisecondsSinceEpoch;
+
+    // Don't bother the user more than once every 48 hours
+    if (lastPromptTime != null) {
+      final int diffHours = ((now - lastPromptTime) / (1000 * 60 * 60)).floor();
+      if (diffHours < 48) {
+        return false;
+      }
+    }
+
+    // Only prompt after game 1, and subsequently every 4 completed games
+    if (gamesCount == 1 || gamesCount % 4 == 0) {
+      await prefs.setInt(_keyLastRatingPromptTime, now);
+      return true;
+    }
+
+    return false;
   }
 }

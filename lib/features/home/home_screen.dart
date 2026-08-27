@@ -148,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
         PersistenceService().markTutorialAsSeen();
         return true;
       },
-    )..show(context: context);
+    ).show(context: context);
   }
 
   Future<void> _checkForUpdates() async {
@@ -227,39 +227,37 @@ class _HomeScreenState extends State<HomeScreen> {
       extendBodyBehindAppBar: true,
       appBar: CustomAppBar(
         showBackButton: false,
-        actions: [
-          Builder(
-            builder: (context) => Padding(
-              padding: const EdgeInsets.only(right: 16.0),
-              child: Center(
-                child: InkWell(
-                  key: _menuKey,
-                  onTap: () => Scaffold.of(context).openEndDrawer(),
-                  borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-                  child: Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface.withValues(alpha: 0.7),
-                      borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-                      border: Border.all(color: AppColors.borderStrong),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 14,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.menu_rounded,
-                        color: Colors.white, size: 26),
+        leading: Builder(
+          builder: (context) => Padding(
+            padding: const EdgeInsets.only(left: 16.0),
+            child: Center(
+              child: InkWell(
+                key: _menuKey,
+                onTap: () => Scaffold.of(context).openDrawer(),
+                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                child: Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                    border: Border.all(color: AppColors.borderStrong),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 14,
+                      ),
+                    ],
                   ),
+                  child: const Icon(Icons.menu_rounded,
+                      color: Colors.white, size: 26),
                 ),
               ),
             ),
           ),
-        ],
+        ),
       ),
-      endDrawer: const AppDrawer(),
+      drawer: const AppDrawer(),
       body: AppBackground(
         child: SafeArea(
           child: Column(
